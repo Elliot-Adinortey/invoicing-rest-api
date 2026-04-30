@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "invoicing-rest-api",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "A production-ready RESTful API for invoice management, built with the Laravel framework. It demonstrates real-world backend engineering practices including clean architecture (Controller → Service → Resource), business rule enforcement, inventory tracking with overselling prevention, secure authentication, transactional data integrity, and more.",
     "keywords": [
         "laravel",
         "framework"
