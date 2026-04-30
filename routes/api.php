@@ -15,6 +15,7 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('customers', CustomerController::class);
         Route::apiResource('products', ProductController::class);
+        Route::post('/products/{product}/restock', [ProductController::class, 'restock']);
         Route::apiResource('invoices', InvoiceController::class)
             ->except(['update']);
 

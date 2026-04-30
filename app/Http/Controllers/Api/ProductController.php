@@ -2,48 +2,65 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\Product\ProductServiceInterface;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\RestockProductRequest;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
+use App\Models\Product;
+use App\Support\ApiResponse;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(public ProductServiceInterface $productService) {}
+
+    public function index(): JsonResponse
     {
-        //
+        $products = $this->productService->paginate();
+
+        return ApiResponse::success(
+            ProductResource::collection($products)->response()->getData(true),
+            'Products retrieved successfully.'
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request): JsonResponse
     {
-        //
+        $product = $this->productService->create($request->validated());
+
+        return ApiResponse::success(
+            new ProductResource($product),
+            'Product created successfully.',
+            'success',
+            201
+        );
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Product $product): JsonResponse
     {
-        //
+        return ApiResponse::success(new ProductResource($product), 'Product retrieved successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        //
+        $product = $this->productService->update($product, $request->validated());
+
+        return ApiResponse::success(new ProductResource($product), 'Product updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Product $product): JsonResponse
     {
-        //
+        $this->productService->delete($product);
+
+        return ApiResponse::success(null, 'Product deleted successfully.');
+    }
+
+    public function restock(RestockProductRequest $request, Product $product): JsonResponse
+    {
+        $product = $this->productService->restock($product, $request->validated());
+
+        return ApiResponse::success(new ProductResource($product), 'Product restocked successfully.');
     }
 }
