@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stock_movements', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('invoice_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('type'); // sale, restock
+            $table->integer('quantity');
+            $table->integer('stock_before');
+            $table->integer('stock_after');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

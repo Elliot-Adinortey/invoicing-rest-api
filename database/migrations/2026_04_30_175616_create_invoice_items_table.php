@@ -12,7 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoice_items', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->text('description')->nullable();
+            $table->decimal('unit_price', 15, 2);
+            $table->unsignedInteger('quantity');
+            $table->decimal('amount', 15, 2);
             $table->timestamps();
         });
     }
