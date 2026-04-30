@@ -2,48 +2,59 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\Customer\CustomerServiceInterface;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Requests\UpdateCustomerRequest;
+use App\Http\Resources\CustomerResource;
+use App\Models\Customer;
+use App\Support\ApiResponse;
+use Illuminate\Http\JsonResponse;
 
 class CustomerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(public CustomerServiceInterface $customerService) {}
+
+    public function index(): JsonResponse
     {
-        //
+        $customers = $this->customerService->paginate();
+
+        return ApiResponse::success(
+            CustomerResource::collection($customers)->response()->getData(true),
+            'Customers retrieved successfully.'
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreCustomerRequest $request): JsonResponse
     {
-        //
+        $customer = $this->customerService->create($request->validated());
+
+        return ApiResponse::success(
+            new CustomerResource($customer),
+            'Customer created successfully.',
+            'success',
+            201
+        );
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(string $id): JsonResponse
     {
-        //
+        $customer = $this->customerService->find($id);
+
+        return ApiResponse::success(new CustomerResource($customer), 'Customer retrieved successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateCustomerRequest $request, Customer $customer): JsonResponse
     {
-        //
+        $customer = $this->customerService->update($customer, $request->validated());
+
+        return ApiResponse::success(new CustomerResource($customer), 'Customer updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Customer $customer): JsonResponse
     {
-        //
+        $this->customerService->delete($customer);
+
+        return ApiResponse::success(null, 'Customer deleted successfully.');
     }
 }
