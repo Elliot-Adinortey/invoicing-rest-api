@@ -22,4 +22,6 @@ interface InvoiceServiceInterface
     public function create(array $data): Invoice;
 
     public function destroy(Invoice $invoice): void;
+
+    public function markAsPaid(Invoice $invoice): Invoice;
 }

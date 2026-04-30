@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Contracts\Auth\AuthServiceInterface;
 use App\Contracts\Customer\CustomerServiceInterface;
+use App\Contracts\Invoice\InvoiceServiceInterface;
 use App\Services\AuthService;
 use App\Services\CustomerService;
+use App\Services\InvoiceService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -17,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
         $this->app->bind(CustomerServiceInterface::class, CustomerService::class);
+        $this->app->bind(InvoiceServiceInterface::class, InvoiceService::class);
     }
 
     /**

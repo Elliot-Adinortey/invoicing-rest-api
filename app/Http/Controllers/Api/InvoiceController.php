@@ -2,48 +2,62 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Contracts\Invoice\InvoiceServiceInterface;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreInvoiceRequest;
+use App\Http\Resources\InvoiceResource;
+use App\Models\Invoice;
+use App\Support\ApiResponse;
+use Illuminate\Http\JsonResponse;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(public InvoiceServiceInterface $invoiceService) {}
+
+    public function index(): JsonResponse
     {
-        //
+        $invoices = $this->invoiceService->paginate();
+
+        return ApiResponse::success(
+            InvoiceResource::collection($invoices)->response()->getData(true),
+            'Invoices retrieved successfully.'
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreInvoiceRequest $request): JsonResponse
     {
-        //
+        $data = array_merge($request->validated(), [
+            'user_id' => $request->user()->id,
+        ]);
+
+        $invoice = $this->invoiceService->create($data);
+
+        return ApiResponse::success(
+            new InvoiceResource($invoice),
+            'Invoice created successfully.',
+            'success',
+            201
+        );
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Invoice $invoice): JsonResponse
     {
-        //
+        $invoice = $this->invoiceService->find($invoice->id);
+
+        return ApiResponse::success(new InvoiceResource($invoice), 'Invoice retrieved successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Invoice $invoice): JsonResponse
     {
-        //
+        $this->invoiceService->destroy($invoice);
+
+        return ApiResponse::success(null, 'Invoice deleted successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function markAsPaid(Invoice $invoice): JsonResponse
     {
-        //
+        $invoice = $this->invoiceService->markAsPaid($invoice);
+
+        return ApiResponse::success(new InvoiceResource($invoice), 'Invoice marked as paid.');
     }
 }
