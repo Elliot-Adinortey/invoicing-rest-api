@@ -1,4 +1,4 @@
-# 🚀 Laravel Invoicing REST API
+# 🚀 Invoicing REST API
 
 ## 📌 Overview
 
