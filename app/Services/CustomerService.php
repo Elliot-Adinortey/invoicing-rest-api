@@ -42,6 +42,6 @@ class CustomerService implements CustomerServiceInterface
 
     public function delete(Customer $customer): void
     {
-        $customer->delete();
+        $customer->deleteOrFail();
     }
 }
