@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Services;
+
+use App\Contracts\Auth\AuthServiceInterface;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
+
+class AuthService implements AuthServiceInterface
+{
+    /**
+     * @param  array{name: string, email: string, password: string}  $data
+     * @return array{user: User, token: string}
+     */
+    public function register(array $data): array
+    {
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return [
+            'user' => $user,
+            'token' => $user->createToken('api-token')->plainTextToken,
+        ];
+    }
+
+    /**
+     * @param  array{email: string, password: string}  $data
+     * @return array{user: User, token: string}
+     *
+     * @throws ValidationException
+     */
+    public function login(array $data): array
+    {
+        $user = User::where('email', $data['email'])->first();
+
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Invalid login credentials.'],
+            ]);
+        }
+
+        return [
+            'user' => $user,
+            'token' => $user->createToken('api-token')->plainTextToken,
+        ];
+    }
+
+    public function logout(Request $request): void
+    {
+        /** @var PersonalAccessToken $token */
+        $token = $request->user()->currentAccessToken();
+        $token->delete();
+    }
+}
