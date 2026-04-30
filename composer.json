@@ -1,6 +1,6 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "invoicing-rest-api",
+    "name": "elliot/invoicing-rest-api",
     "type": "project",
     "description": "A production-ready RESTful API for invoice management, built with the Laravel framework. It demonstrates real-world backend engineering practices including clean architecture (Controller → Service → Resource), business rule enforcement, inventory tracking with overselling prevention, secure authentication, transactional data integrity, and more.",
     "keywords": [
@@ -11,7 +11,7 @@
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.0",
-        "laravel/sanctum": "^4.3",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
