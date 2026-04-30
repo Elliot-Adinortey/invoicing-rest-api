@@ -38,7 +38,9 @@ class InvoiceService implements InvoiceServiceInterface
 
             $subtotal = collect($items)->sum(fn (array $item) => $item['unit_price'] * $item['quantity']);
 
-            $invoice = Invoice::create(array_merge($data, [
+            $invoice = Invoice::create(array_merge([
+                'status' => 'issued',
+            ], $data, [
                 'subtotal' => $subtotal,
                 'total' => $subtotal,
             ]));
