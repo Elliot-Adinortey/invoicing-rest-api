@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Support\ApiResponse;
 
 class AuthController extends Controller
 {
@@ -25,13 +26,10 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        return response()->json([
-            'message' => 'User registered successfully.',
-            'data' => [
-                'user' => $user,
-                'token' => $user->createToken('api-token')->plainTextToken,
-            ],
-        ], 201);
+        return ApiResponse::success([
+            'user' => $user,
+            'token' => $user->createToken('api-token')->plainTextToken,
+        ], 'User registered successfully.', 'success', 201);
     }
 
     public function login(Request $request)
@@ -51,6 +49,8 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful.',
+            'status' => 'success',
+            'status_code' => 200,
             'data' => [
                 'user' => $user,
                 'token' => $user->createToken('api-token')->plainTextToken,
@@ -64,8 +64,6 @@ class AuthController extends Controller
         $token = $request->user()->currentAccessToken();
         $token->delete();
 
-        return response()->json([
-            'message' => 'Logout successful.',
-        ]);
+        return ApiResponse::success(null, 'Logout successful.', 'success', 200);
     }
 }
