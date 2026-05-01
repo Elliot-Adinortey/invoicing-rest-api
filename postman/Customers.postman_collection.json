@@ -1,0 +1,198 @@
+{
+	"info": {
+		"_postman_id": "29a34738-3807-4195-8fe9-c1f5eedc0235",
+		"name": "Customers",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44650169",
+		"_collection_link": "https://www.postman.com/elliotadinortey/workspace/interview-case-study/collection/44650169-29a34738-3807-4195-8fe9-c1f5eedc0235?action=share&source=collection_link&creator=44650169"
+	},
+	"item": [
+		{
+			"name": "List Customers",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}customers",
+					"host": [
+						"{{localhost}}customers"
+					]
+				},
+				"description": "## Get Customers\n\nThis endpoint retrieves a list of customers from the API. It provides information about each customer, including their ID, name, email, phone number, address, and timestamps for when the customer was created and last updated.\n\n### Request\n\n- **Method:** GET\n    \n- **URL:** `http://127.0.0.1:8000/api/v1/customers`\n    \n\n### Response\n\nThe response is returned in JSON format and contains the following structure:\n\n- **success**: A boolean indicating whether the request was successful.\n    \n- **message**: A string that may contain additional information about the request.\n    \n- **status**: A string representing the status of the request.\n    \n- **status_code**: An integer indicating the HTTP status code.\n    \n- **data**: An object containing the customer data:\n    \n    - **data**: An array of customer objects, where each object contains:\n        \n        - **id**: The unique identifier for the customer.\n            \n        - **customer_name**: The name of the customer.\n            \n        - **email**: The email address of the customer.\n            \n        - **phone**: The phone number of the customer.\n            \n        - **address**: The physical address of the customer.\n            \n        - **created_at**: The timestamp when the customer was created.\n            \n        - **updated_at**: The timestamp when the customer was last updated.\n            \n    - **links**: An object providing pagination information:\n        \n        - **first**: URL to the first page of results.\n            \n        - **last**: URL to the last page of results.\n            \n        - **prev**: URL to the previous page of results (null if there is no previous page).\n            \n        - **next**: URL to the next page of results (null if there is no next page).\n            \n    - **meta**: An object containing metadata about the pagination:\n        \n        - **current_page**: The current page number.\n            \n        - **from**: The starting index of the current page.\n            \n        - **last_page**: The total number of pages available.\n            \n        - **links**: An array of pagination link objects, each containing:\n            \n            - **url**: The URL for the page.\n                \n            - **label**: The label for the page link.\n                \n            - **page**: The page number.\n                \n            - **active**: A boolean indicating if the link is for the current page.\n                \n        - **path**: The base path for the pagination links.\n            \n        - **per_page**: The number of results per page.\n            \n        - **to**: The ending index of the current page.\n            \n        - **total**: The total number of customers available.\n            \n\n### Usage\n\nTo use this endpoint effectively, simply send a GET request to the specified URL. The response will provide you with a structured list of customers, which can be used for further processing or display in your application."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Customer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}customers/019de084-7711-73aa-93be-826f27b1f4de",
+					"host": [
+						"{{localhost}}customers"
+					],
+					"path": [
+						"019de084-7711-73aa-93be-826f27b1f4de"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Customer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customer_name\": \"Lookman Inc.\",\n    \"email\": \"info@gmail.com\",\n    \"phone\": \"+24309987659\",\n    \"address\" : \"Address Line 1.\"\n\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}customers",
+					"host": [
+						"{{localhost}}customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Customer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customer_name\": \"LUkMan Inc.\",\n    \"email\": \"info@gmail.com\",\n    \"phone\": \"+24309987659\",\n    \"address\" : \"Address Line 1.\"\n\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}customers/019ddfeb-a282-7071-8f3a-b209f2512de7",
+					"host": [
+						"{{localhost}}customers"
+					],
+					"path": [
+						"019ddfeb-a282-7071-8f3a-b209f2512de7"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Single Customer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}customers/019ddfeb-a282-7071-8f3a-b209f2512de7",
+					"host": [
+						"{{localhost}}customers"
+					],
+					"path": [
+						"019ddfeb-a282-7071-8f3a-b209f2512de7"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

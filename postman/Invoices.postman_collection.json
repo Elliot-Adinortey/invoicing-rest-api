@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "bc47eb2e-1c56-4ddb-986f-013c12396a25",
+		"name": "Invoices",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44650169",
+		"_collection_link": "https://www.postman.com/elliotadinortey/workspace/interview-case-study/collection/44650169-bc47eb2e-1c56-4ddb-986f-013c12396a25?action=share&source=collection_link&creator=44650169"
+	},
+	"item": [
+		{
+			"name": "List Invoices",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}invoices?status=issued&customer_id=\"\"&invoice_number=\"\"&issue_date=\"\"",
+					"host": [
+						"{{localhost}}invoices"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "issued"
+						},
+						{
+							"key": "customer_id",
+							"value": "\"\""
+						},
+						{
+							"key": "invoice_number",
+							"value": "\"\""
+						},
+						{
+							"key": "issue_date",
+							"value": "\"\""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Invoice",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}invoices",
+					"host": [
+						"{{localhost}}invoices"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Invoice",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}invoices/019ddfeb-a298-7070-88a0-02049d6c8ae1",
+					"host": [
+						"{{localhost}}invoices"
+					],
+					"path": [
+						"019ddfeb-a298-7070-88a0-02049d6c8ae1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mark As Paid",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"paid\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}invoices/019ddfeb-a2d6-7356-a8b9-62157d499186/mark-paid",
+					"host": [
+						"{{localhost}}invoices"
+					],
+					"path": [
+						"019ddfeb-a2d6-7356-a8b9-62157d499186",
+						"mark-paid"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Single Invoice",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}invoices/019ddfeb-a298-7070-88a0-02049db0c6e3",
+					"host": [
+						"{{localhost}}invoices"
+					],
+					"path": [
+						"019ddfeb-a298-7070-88a0-02049db0c6e3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Invoice",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}invoices/019ddfeb-a298-7070-88a0-02049e778dd0",
+					"host": [
+						"{{localhost}}invoices"
+					],
+					"path": [
+						"019ddfeb-a298-7070-88a0-02049e778dd0"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

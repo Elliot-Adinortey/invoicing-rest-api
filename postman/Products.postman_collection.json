@@ -1,0 +1,197 @@
+{
+	"info": {
+		"_postman_id": "e7cfe375-8086-4399-83e8-09f394414aef",
+		"name": "Products",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44650169",
+		"_collection_link": "https://www.postman.com/elliotadinortey/workspace/interview-case-study/collection/44650169-e7cfe375-8086-4399-83e8-09f394414aef?action=share&source=collection_link&creator=44650169"
+	},
+	"item": [
+		{
+			"name": "List Products",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}products",
+					"host": [
+						"{{localhost}}products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Single Product",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{localhost}}products/019ddfeb-a278-7060-b860-1df73c4375e1",
+					"host": [
+						"{{localhost}}products"
+					],
+					"path": [
+						"019ddfeb-a278-7060-b860-1df73c4375e1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Product",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"product_name\": \"Cable Management Kits\",\n    \"description\": \"Asperiores et eligendi voluptas.\",\n    \"unit_price\": \"53.77\",\n    \"stock_quantity\": 1160\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}products/019ddfeb-a278-7060-b860-1df73c4375e1",
+					"host": [
+						"{{localhost}}products"
+					],
+					"path": [
+						"019ddfeb-a278-7060-b860-1df73c4375e1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Product",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}products/019ddfeb-a277-704e-aee1-0a07dee3b220",
+					"host": [
+						"{{localhost}}products"
+					],
+					"path": [
+						"019ddfeb-a277-704e-aee1-0a07dee3b220"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Product",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{vault:authorization-secret}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"product_name\": \"Game Console Management Kits\",\n    \"description\": \"Testing for Nintendo.\",\n    \"unit_price\": \"530.77\",\n    \"stock_quantity\": 11\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{localhost}}products",
+					"host": [
+						"{{localhost}}products"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
