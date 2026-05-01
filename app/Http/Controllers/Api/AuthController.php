@@ -12,6 +12,25 @@ class AuthController extends Controller
 {
     public function __construct(public AuthServiceInterface $authService) {}
 
+    /**
+     * Register a new user.
+     *
+     * @group Authentication
+     *
+     * @unauthenticated
+     *
+     * @bodyParam name string required Example: John Doe
+     * @bodyParam email string required Example: [EMAIL_ADDRESS]
+     * @bodyParam password string required Example: password
+     * @bodyParam password_confirmation string required Example: password
+     *
+     * @response 201 {
+     *     "message": "User registered successfully.",
+     *     "status": "success",
+     *     "status_code": 201,
+     *     "data": {}
+     * }
+     */
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -26,7 +45,41 @@ class AuthController extends Controller
     }
 
 
-
+    /**
+     * Login with email and password.
+     *
+     * @group Authentication
+     *
+     * @unauthenticated
+     *
+     * @bodyParam email string required Example: [EMAIL_ADDRESS]
+     * @bodyParam password string required Example: password
+     *
+     * @response 200 {
+     *     "message": "Login successful.",
+     *     "status": "success",
+     *     "status_code": 200,
+     *     "data": {
+     *         "user": {
+     *             "id": "uuid",
+     *             "name": "John Doe",
+     *             "email": "[EMAIL_ADDRESS]",
+     *             "email_verified_at": "datetime",
+     *             "created_at": "datetime",
+     *             "updated_at": "datetime"
+     *         },
+     *         "token": "personal_access_token"
+     *     }
+     * }
+     *
+     * @response 401 {
+     *     "message": "These credentials do not match our records.",
+     *     "status": "error",
+     *     "status_code": 401,
+     *     "errors": [],
+     *     "code": "REQUEST_FAILED"
+     * }
+     */
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -39,7 +92,21 @@ class AuthController extends Controller
         return ApiResponse::success($result, 'Login successful.');
     }
 
-    
+
+    /**
+     * Logout user.
+     *
+     * @group Authentication
+     *
+     * @authenticated
+     *
+     * @response 200 {
+     *     "message": "Logout successful.",
+     *     "status": "success",
+     *     "status_code": 200,
+     *     "data": null
+     * }
+     */
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request);
