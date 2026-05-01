@@ -56,7 +56,6 @@ describe('GET /invoices', function () {
         $this->getJson(API_INVOICES)
             ->assertStatus(200)
             ->assertJsonStructure([
-                'success',
                 'message',
                 'status',
                 'status_code',
@@ -65,7 +64,7 @@ describe('GET /invoices', function () {
                     'meta' => ['current_page', 'total'],
                 ],
             ])
-            ->assertJson(['success' => true, 'status_code' => 200]);
+            ->assertJson(['status_code' => 200]);
     });
 
     it('filters invoices by status', function () {
@@ -181,7 +180,6 @@ describe('POST /invoices', function () {
                 ],
             ])
             ->assertJson([
-                'success' => true,
                 'message' => 'Invoice created successfully.',
                 'data' => [
                     'status' => 'issued',
@@ -368,10 +366,8 @@ describe('GET /invoices/{id}', function () {
                 'data' => ['id', 'invoice_number', 'status', 'customer', 'items'],
             ])
             ->assertJson([
-                'success' => true,
                 'data' => ['id' => $invoice->id, 'invoice_number' => $invoice->invoice_number],
-            ]);
-    });
+            ]);    });
 
     it('returns 404 for an unknown invoice', function () {
         actingAsInvoiceUser();
@@ -400,7 +396,6 @@ describe('PUT /invoices/{id}', function () {
         ])
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Invoice updated successfully.',
                 'data' => ['customer' => ['id' => $newCustomer->id]],
             ]);
@@ -470,7 +465,6 @@ describe('POST /invoices/{id}/issue', function () {
         $this->postJson(API_INVOICES."/{$invoice->id}/issue")
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Invoice issued successfully.',
                 'data' => ['id' => $invoice->id, 'status' => 'issued'],
             ]);
@@ -540,7 +534,6 @@ describe('POST /invoices/{id}/cancel', function () {
         $this->postJson(API_INVOICES."/{$invoice->id}/cancel")
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Invoice cancelled successfully.',
                 'data' => ['id' => $invoice->id, 'status' => 'cancelled'],
             ]);
@@ -641,7 +634,7 @@ describe('DELETE /invoices/{id}', function () {
 
         $this->deleteJson(API_INVOICES."/{$invoice->id}")
             ->assertStatus(200)
-            ->assertJson(['success' => true, 'message' => 'Invoice deleted successfully.']);
+            ->assertJson(['message' => 'Invoice deleted successfully.']);
 
         $this->assertSoftDeleted('invoices', ['id' => $invoice->id]);
     });
@@ -653,7 +646,6 @@ describe('DELETE /invoices/{id}', function () {
         $this->deleteJson(API_INVOICES."/{$invoice->id}")
             ->assertStatus(422)
             ->assertJson([
-                'success' => false,
                 'message' => 'Paid invoices cannot be deleted.',
             ]);
 
@@ -683,7 +675,6 @@ describe('POST /invoices/{id}/mark-paid', function () {
         $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Invoice marked as paid.',
                 'data' => ['id' => $invoice->id, 'status' => 'paid'],
             ]);
@@ -698,7 +689,6 @@ describe('POST /invoices/{id}/mark-paid', function () {
         $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
             ->assertStatus(422)
             ->assertJson([
-                'success' => false,
                 'message' => 'Draft invoices cannot be marked as paid. Issue the invoice first.',
             ]);
 
@@ -712,7 +702,6 @@ describe('POST /invoices/{id}/mark-paid', function () {
         $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
             ->assertStatus(422)
             ->assertJson([
-                'success' => false,
                 'message' => 'Invoice is already paid.',
             ]);
     });
@@ -724,7 +713,6 @@ describe('POST /invoices/{id}/mark-paid', function () {
         $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
             ->assertStatus(422)
             ->assertJson([
-                'success' => false,
                 'message' => 'Cancelled invoices cannot be marked as paid.',
             ]);
     });

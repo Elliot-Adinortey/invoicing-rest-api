@@ -11,6 +11,8 @@ class StockMovement extends Model
 {
     use HasFactory, HasUuids;
 
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'product_id',
         'invoice_id',

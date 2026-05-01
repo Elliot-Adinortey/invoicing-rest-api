@@ -24,14 +24,12 @@ describe('register', function () {
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'success',
                 'message',
                 'status',
                 'status_code',
                 'data' => ['user', 'token'],
             ])
             ->assertJson([
-                'success' => true,
                 'message' => 'User registered successfully.',
                 'status' => 'success',
                 'status_code' => 201,
@@ -119,7 +117,6 @@ describe('login', function () {
             'password' => 'wrong-password',
         ])->assertStatus(401)
             ->assertJson([
-                'success' => false,
                 'status_code' => 401,
                 'message' => 'Invalid login credentials.',
             ]);
@@ -131,7 +128,6 @@ describe('login', function () {
             'password' => 'password',
         ])->assertStatus(401)
             ->assertJson([
-                'success' => false,
                 'status_code' => 401,
                 'message' => 'Invalid login credentials.',
             ]);
@@ -157,7 +153,6 @@ describe('logout', function () {
             ->postJson(API_LOGOUT)
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Logout successful.',
                 'status' => 'success',
                 'status_code' => 200,

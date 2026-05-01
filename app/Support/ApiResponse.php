@@ -14,7 +14,6 @@ class ApiResponse
         array $meta = []
     ): JsonResponse {
         $response = [
-            'success' => true,
             'message' => $message,
             'status' => $status,
             'status_code' => $status_code,
@@ -35,7 +34,6 @@ class ApiResponse
         string $code = 'REQUEST_FAILED'
     ): JsonResponse {
         return response()->json([
-            'success' => false,
             'message' => $message,
             'status' => 'error',
             'status_code' => $status,

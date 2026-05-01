@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('stock_before');
             $table->integer('stock_after');
             $table->text('description')->nullable();
-            $table->timestamps();
+            $table->timestamp('created_at');
         });
     }
 

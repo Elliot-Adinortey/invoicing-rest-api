@@ -28,7 +28,6 @@ describe('GET /customers', function () {
         $this->getJson(API_CUSTOMERS)
             ->assertStatus(200)
             ->assertJsonStructure([
-                'success',
                 'message',
                 'status',
                 'status_code',
@@ -37,7 +36,7 @@ describe('GET /customers', function () {
                     'meta' => ['current_page', 'total'],
                 ],
             ])
-            ->assertJson(['success' => true, 'status_code' => 200]);
+            ->assertJson(['status_code' => 200]);
     });
 
     it('returns 401 when unauthenticated', function () {
@@ -91,7 +90,6 @@ describe('POST /customers', function () {
             ->assertStatus(201)
             ->assertJsonStructure(['data' => ['id', 'customer_name', 'email', 'phone', 'address']])
             ->assertJson([
-                'success' => true,
                 'message' => 'Customer created successfully.',
                 'data' => ['customer_name' => 'Acme Corp', 'email' => 'acme@example.com'],
             ]);
@@ -130,7 +128,6 @@ describe('GET /customers/{id}', function () {
         $this->getJson(API_CUSTOMERS."/{$customer->id}")
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'data' => [
                     'id' => $customer->id,
                     'customer_name' => $customer->customer_name,
@@ -158,7 +155,6 @@ describe('PUT /customers/{id}', function () {
         ])
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Customer updated successfully.',
                 'data' => ['customer_name' => 'Updated Name'],
             ]);
@@ -192,7 +188,7 @@ describe('DELETE /customers/{id}', function () {
 
         $this->deleteJson(API_CUSTOMERS."/{$customer->id}")
             ->assertStatus(200)
-            ->assertJson(['success' => true, 'message' => 'Customer deleted successfully.']);
+            ->assertJson(['message' => 'Customer deleted successfully.']);
 
         $this->assertSoftDeleted('customers', ['id' => $customer->id]);
     });

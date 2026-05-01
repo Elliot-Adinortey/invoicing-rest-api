@@ -28,7 +28,6 @@ describe('GET /products', function () {
         $this->getJson(API_PRODUCTS)
             ->assertStatus(200)
             ->assertJsonStructure([
-                'success',
                 'message',
                 'status',
                 'status_code',
@@ -37,7 +36,7 @@ describe('GET /products', function () {
                     'meta' => ['current_page', 'total'],
                 ],
             ])
-            ->assertJson(['success' => true, 'status_code' => 200]);
+            ->assertJson(['status_code' => 200]);
     });
 
     it('returns 401 when unauthenticated', function () {
@@ -81,7 +80,6 @@ describe('POST /products', function () {
             ->assertStatus(201)
             ->assertJsonStructure(['data' => ['id', 'product_name', 'description', 'unit_price', 'stock_quantity']])
             ->assertJson([
-                'success' => true,
                 'message' => 'Product created successfully.',
                 'data' => [
                     'product_name' => 'Wireless Keyboard',
@@ -151,7 +149,6 @@ describe('GET /products/{id}', function () {
         $this->getJson(API_PRODUCTS."/{$product->id}")
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'data' => [
                     'id' => $product->id,
                     'product_name' => $product->product_name,
@@ -185,7 +182,6 @@ describe('PUT /products/{id}', function () {
         ])
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Product updated successfully.',
                 'data' => ['product_name' => 'Updated Name', 'unit_price' => '75.00'],
             ]);
@@ -234,7 +230,7 @@ describe('DELETE /products/{id}', function () {
 
         $this->deleteJson(API_PRODUCTS."/{$product->id}")
             ->assertStatus(200)
-            ->assertJson(['success' => true, 'message' => 'Product deleted successfully.']);
+            ->assertJson(['message' => 'Product deleted successfully.']);
 
         $this->assertSoftDeleted('products', ['id' => $product->id]);
     });
@@ -265,7 +261,6 @@ describe('POST /products/{id}/restock', function () {
         ])
             ->assertStatus(200)
             ->assertJson([
-                'success' => true,
                 'message' => 'Product restocked successfully.',
                 'data' => ['stock_quantity' => 35],
             ]);
