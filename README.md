@@ -143,6 +143,7 @@ POST   /api/v1/products
 GET    /api/v1/products/{id}
 PUT    /api/v1/products/{id}
 DELETE /api/v1/products/{id}
+POST   /api/v1/products/{id}/restock
 ```
 
 ---
@@ -153,9 +154,11 @@ DELETE /api/v1/products/{id}
 GET    /api/v1/invoices
 POST   /api/v1/invoices
 GET    /api/v1/invoices/{id}
-DELETE /api/v1/invoices/{id}
-POST   /api/v1/invoices/{id}/mark-paid
 PUT    /api/v1/invoices/{id}
+DELETE /api/v1/invoices/{id}
+POST   /api/v1/invoices/{id}/issue
+POST   /api/v1/invoices/{id}/cancel
+POST   /api/v1/invoices/{id}/mark-paid
 ```
 
 ---
