@@ -11,6 +11,7 @@ use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -23,38 +24,15 @@ class ProductController extends Controller
      *
      * @authenticated
      *
+     * @queryParam search string Search by product name. Example: keyboard
+     * @queryParam per_page integer Items per page (max 100). Default: 15
      * @queryParam page integer Page number. Default: 1
-     * @queryParam per_page integer Items per page. Default: 15
-     *
-     * @response 200 {
-     *     "data": [
-     *         {
-     *             "id": "uuid",
-     *             "name": "Product Name",
-     *             "description": "Product Description",
-     *             "sku": "SKU",
-     *             "price": "100.00",
-     *             "stock_quantity": 10,
-     *             "created_at": "datetime",
-     *             "updated_at": "datetime"
-     *         }
-     *     ],
-     *     "meta": {
-     *         "current_page": 1,
-     *         "from": 1,
-     *         "last_page": 1,
-     *         "per_page": 15,
-     *         "to": 10,
-     *         "total": 10
-     *     },
-     *     "message": "Products retrieved successfully.",
-     *     "status": "success",
-     *     "status_code": 200
-     * }
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $products = $this->productService->paginate();
+        $filters = $request->only(['search', 'per_page']);
+
+        $products = $this->productService->paginate($filters);
 
         return ApiResponse::success(
             ProductResource::collection($products)->response()->getData(true),
@@ -127,7 +105,6 @@ class ProductController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Product not found.",
      *     "status": "error",
@@ -171,7 +148,6 @@ class ProductController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Product not found.",
      *     "status": "error",
@@ -186,7 +162,7 @@ class ProductController extends Controller
 
         return ApiResponse::success(new ProductResource($product), 'Product updated successfully.');
     }
-    
+
     /**
      * Remove a specific product.
      *
@@ -202,7 +178,6 @@ class ProductController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Product not found.",
      *     "status": "error",
@@ -244,7 +219,6 @@ class ProductController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Product not found.",
      *     "status": "error",

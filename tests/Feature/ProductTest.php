@@ -43,6 +43,27 @@ describe('GET /products', function () {
     it('returns 401 when unauthenticated', function () {
         $this->getJson(API_PRODUCTS)->assertStatus(401);
     });
+
+    it('searches products by name', function () {
+        actingAsProductUser();
+        Product::factory()->create(['product_name' => 'Wireless Keyboard']);
+        Product::factory()->create(['product_name' => 'USB Hub']);
+
+        $response = $this->getJson(API_PRODUCTS.'?search=keyboard')->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(1);
+        expect($response->json('data.data.0.product_name'))->toBe('Wireless Keyboard');
+    });
+
+    it('respects per_page parameter', function () {
+        actingAsProductUser();
+        Product::factory()->count(5)->create();
+
+        $response = $this->getJson(API_PRODUCTS.'?per_page=2')->assertStatus(200);
+
+        expect($response->json('data.data'))->toHaveCount(2);
+        expect($response->json('data.meta.per_page'))->toBe(2);
+    });
 });
 
 // ─── Store ────────────────────────────────────────────────────────────────────

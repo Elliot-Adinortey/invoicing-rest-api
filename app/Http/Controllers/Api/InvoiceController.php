@@ -22,41 +22,30 @@ class InvoiceController extends Controller
      *
      * @authenticated
      *
+     * @queryParam status string Filter by status (issued, paid, cancelled). Example: issued
+     * @queryParam customer_id string Filter by customer UUID. Example: uuid
+     * @queryParam search string Search by invoice number. Example: INV-20260501
+     * @queryParam issue_date_from date Filter invoices issued on or after this date. Example: 2026-01-01
+     * @queryParam issue_date_to date Filter invoices issued on or before this date. Example: 2026-12-31
+     * @queryParam due_date_from date Filter invoices due on or after this date. Example: 2026-01-01
+     * @queryParam due_date_to date Filter invoices due on or before this date. Example: 2026-12-31
+     * @queryParam per_page integer Items per page (max 100). Default: 15
      * @queryParam page integer Page number. Default: 1
-     * @queryParam per_page integer Items per page. Default: 15
-     *
-     * @response 200 {
-     *     "data": [
-     *         {
-     *             "id": "uuid",
-     *             "invoice_number": "INV-001",
-     *             "customer_id": "uuid",
-     *             "issue_date": "2023-10-26",
-     *             "due_date": "2023-11-26",
-     *             "subtotal": "100.00",
-     *             "tax": "10.00",
-     *             "total": "110.00",
-     *             "status": "pending",
-     *             "created_at": "datetime",
-     *             "updated_at": "datetime"
-     *         }
-     *     ],
-     *     "meta": {
-     *         "current_page": 1,
-     *         "from": 1,
-     *         "last_page": 1,
-     *         "per_page": 15,
-     *         "to": 10,
-     *         "total": 10
-     *     },
-     *     "message": "Invoices retrieved successfully.",
-     *     "status": "success",
-     *     "status_code": 200
-     * }
      */
     public function index(Request $request): JsonResponse
     {
-        $invoices = $this->invoiceService->paginate($request->query('status'));
+        $filters = $request->only([
+            'status',
+            'customer_id',
+            'search',
+            'issue_date_from',
+            'issue_date_to',
+            'due_date_from',
+            'due_date_to',
+            'per_page',
+        ]);
+
+        $invoices = $this->invoiceService->paginate($filters);
 
         return ApiResponse::success(
             InvoiceResource::collection($invoices)->response()->getData(true),

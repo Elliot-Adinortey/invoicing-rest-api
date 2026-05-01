@@ -7,7 +7,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface InvoiceServiceInterface
 {
-    public function paginate(?string $status = null): LengthAwarePaginator;
+    /**
+     * @param  array{status?: string, customer_id?: string, search?: string, issue_date_from?: string, issue_date_to?: string, due_date_from?: string, due_date_to?: string, per_page?: int}  $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator;
 
     public function find(string $id): Invoice;
 

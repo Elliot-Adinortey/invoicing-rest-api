@@ -10,6 +10,7 @@ use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -22,37 +23,15 @@ class CustomerController extends Controller
      *
      * @authenticated
      *
+     * @queryParam search string Search by name or email. Example: acme
+     * @queryParam per_page integer Items per page (max 100). Default: 15
      * @queryParam page integer Page number. Default: 1
-     * @queryParam per_page integer Items per page. Default: 15
-     *
-     * @response 200 {
-     *     "data": [
-     *         {
-     *             "id": "uuid",
-     *             "customer_name": "Customer Name",
-     *             "email": "[EMAIL_ADDRESS]",
-     *             "phone": "+1234567890",
-     *             "address": "123 Main St",
-     *             "created_at": "datetime",
-     *             "updated_at": "datetime"
-     *         }
-     *     ],
-     *     "meta": {
-     *         "current_page": 1,
-     *         "from": 1,
-     *         "last_page": 1,
-     *         "per_page": 15,
-     *         "to": 10,
-     *         "total": 10
-     *     },
-     *     "message": "Customers retrieved successfully.",
-     *     "status": "success",
-     *     "status_code": 200
-     * }
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $customers = $this->customerService->paginate();
+        $filters = $request->only(['search', 'per_page']);
+
+        $customers = $this->customerService->paginate($filters);
 
         return ApiResponse::success(
             CustomerResource::collection($customers)->response()->getData(true),

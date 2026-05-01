@@ -9,9 +9,19 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductService implements ProductServiceInterface
 {
-    public function paginate(): LengthAwarePaginator
+    /**
+     * @param  array{search?: string, per_page?: int}  $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator
     {
-        return Product::latest()->paginate(15);
+        $perPage = isset($filters['per_page']) ? min((int) $filters['per_page'], 100) : 15;
+
+        return Product::when(
+            $filters['search'] ?? null,
+            fn ($q, $search) => $q->where('product_name', 'like', "%{$search}%")
+        )
+            ->latest()
+            ->paginate($perPage);
     }
 
     /**

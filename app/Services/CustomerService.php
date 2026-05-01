@@ -9,9 +9,22 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class CustomerService implements CustomerServiceInterface
 {
-    public function paginate(): LengthAwarePaginator
+    /**
+     * @param  array{search?: string, per_page?: int}  $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator
     {
-        return Customer::latest()->paginate(15);
+        $perPage = isset($filters['per_page']) ? min((int) $filters['per_page'], 100) : 15;
+
+        return Customer::when(
+            $filters['search'] ?? null,
+            fn ($q, $search) => $q->where(function ($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+        )
+            ->latest()
+            ->paginate($perPage);
     }
 
     /**

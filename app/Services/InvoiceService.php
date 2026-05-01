@@ -13,12 +13,23 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class InvoiceService implements InvoiceServiceInterface
 {
-    public function paginate(?string $status = null): LengthAwarePaginator
+    /**
+     * @param  array{status?: string, customer_id?: string, search?: string, issue_date_from?: string, issue_date_to?: string, due_date_from?: string, due_date_to?: string, per_page?: int}  $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator
     {
+        $perPage = isset($filters['per_page']) ? min((int) $filters['per_page'], 100) : 15;
+
         return Invoice::with(['customer', 'user', 'items.product'])
-            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
+            ->when($filters['customer_id'] ?? null, fn ($q, $id) => $q->where('customer_id', $id))
+            ->when($filters['search'] ?? null, fn ($q, $search) => $q->where('invoice_number', 'like', "%{$search}%"))
+            ->when($filters['issue_date_from'] ?? null, fn ($q, $date) => $q->whereDate('issue_date', '>=', $date))
+            ->when($filters['issue_date_to'] ?? null, fn ($q, $date) => $q->whereDate('issue_date', '<=', $date))
+            ->when($filters['due_date_from'] ?? null, fn ($q, $date) => $q->whereDate('due_date', '>=', $date))
+            ->when($filters['due_date_to'] ?? null, fn ($q, $date) => $q->whereDate('due_date', '<=', $date))
             ->latest()
-            ->paginate(15);
+            ->paginate($perPage);
     }
 
     /**

@@ -83,6 +83,66 @@ describe('GET /invoices', function () {
         );
     });
 
+    it('filters invoices by customer_id', function () {
+        $user = actingAsInvoiceUser();
+        $customerA = Customer::factory()->create();
+        $customerB = Customer::factory()->create();
+        Invoice::factory()->count(2)->create(['user_id' => $user->id, 'customer_id' => $customerA->id]);
+        Invoice::factory()->create(['user_id' => $user->id, 'customer_id' => $customerB->id]);
+
+        $response = $this->getJson(API_INVOICES."?customer_id={$customerA->id}")->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(2);
+        collect($response->json('data.data'))->each(
+            fn ($invoice) => expect($invoice['customer']['id'])->toBe($customerA->id)
+        );
+    });
+
+    it('filters invoices by invoice number search', function () {
+        $user = actingAsInvoiceUser();
+        Invoice::factory()->create(['user_id' => $user->id, 'invoice_number' => 'INV-20260501-0001']);
+        Invoice::factory()->create(['user_id' => $user->id, 'invoice_number' => 'INV-20260601-0001']);
+
+        $response = $this->getJson(API_INVOICES.'?search=20260501')->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(1);
+        expect($response->json('data.data.0.invoice_number'))->toBe('INV-20260501-0001');
+    });
+
+    it('filters invoices by issue_date range', function () {
+        $user = actingAsInvoiceUser();
+        Invoice::factory()->create(['user_id' => $user->id, 'issue_date' => '2026-01-15']);
+        Invoice::factory()->create(['user_id' => $user->id, 'issue_date' => '2026-03-10']);
+        Invoice::factory()->create(['user_id' => $user->id, 'issue_date' => '2026-06-01']);
+
+        $response = $this->getJson(API_INVOICES.'?issue_date_from=2026-02-01&issue_date_to=2026-04-30')
+            ->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(1);
+        expect($response->json('data.data.0.issue_date'))->toStartWith('2026-03-10');
+    });
+
+    it('filters invoices by due_date range', function () {
+        $user = actingAsInvoiceUser();
+        Invoice::factory()->create(['user_id' => $user->id, 'due_date' => '2026-02-28']);
+        Invoice::factory()->create(['user_id' => $user->id, 'due_date' => '2026-05-15']);
+
+        $response = $this->getJson(API_INVOICES.'?due_date_from=2026-05-01')->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(1);
+        expect($response->json('data.data.0.due_date'))->toStartWith('2026-05-15');
+    });
+
+    it('respects per_page parameter', function () {
+        $user = actingAsInvoiceUser();
+        Invoice::factory()->count(5)->create(['user_id' => $user->id]);
+
+        $response = $this->getJson(API_INVOICES.'?per_page=2')->assertStatus(200);
+
+        expect($response->json('data.data'))->toHaveCount(2);
+        expect($response->json('data.meta.per_page'))->toBe(2);
+    });
+
     it('returns 401 when unauthenticated', function () {
         $this->getJson(API_INVOICES)->assertStatus(401);
     });

@@ -43,6 +43,37 @@ describe('GET /customers', function () {
     it('returns 401 when unauthenticated', function () {
         $this->getJson(API_CUSTOMERS)->assertStatus(401);
     });
+
+    it('searches customers by name', function () {
+        actingAsApiUser();
+        Customer::factory()->create(['customer_name' => 'Acme Corp']);
+        Customer::factory()->create(['customer_name' => 'Globex Inc']);
+
+        $response = $this->getJson(API_CUSTOMERS.'?search=acme')->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(1);
+        expect($response->json('data.data.0.customer_name'))->toBe('Acme Corp');
+    });
+
+    it('searches customers by email', function () {
+        actingAsApiUser();
+        Customer::factory()->create(['email' => 'contact@acme.com']);
+        Customer::factory()->create(['email' => 'info@globex.com']);
+
+        $response = $this->getJson(API_CUSTOMERS.'?search=acme')->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(1);
+    });
+
+    it('respects per_page parameter', function () {
+        actingAsApiUser();
+        Customer::factory()->count(5)->create();
+
+        $response = $this->getJson(API_CUSTOMERS.'?per_page=2')->assertStatus(200);
+
+        expect($response->json('data.data'))->toHaveCount(2);
+        expect($response->json('data.meta.per_page'))->toBe(2);
+    });
 });
 
 // ─── Store ────────────────────────────────────────────────────────────────────

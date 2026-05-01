@@ -7,7 +7,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface ProductServiceInterface
 {
-    public function paginate(): LengthAwarePaginator;
+    /**
+     * @param  array{search?: string, per_page?: int}  $filters
+     */
+    public function paginate(array $filters = []): LengthAwarePaginator;
 
     public function find(string $id): Product;
 
