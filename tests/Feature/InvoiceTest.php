@@ -178,6 +178,44 @@ describe('POST /invoices', function () {
         $this->assertDatabaseHas('invoice_items', ['quantity' => 2, 'amount' => 200.00]);
     });
 
+    it('creates a draft invoice without deducting stock', function () {
+        actingAsInvoiceUser();
+        $product = Product::factory()->create(['stock_quantity' => 10, 'unit_price' => 50.00]);
+        $customer = Customer::factory()->create();
+
+        $this->postJson(API_INVOICES, [
+            'customer_id' => $customer->id,
+            'issue_date' => '2026-04-01',
+            'due_date' => '2026-04-30',
+            'status' => 'draft',
+            'items' => [
+                ['product_id' => $product->id, 'unit_price' => 50.00, 'quantity' => 3],
+            ],
+        ])
+            ->assertStatus(201)
+            ->assertJson(['data' => ['status' => 'draft']]);
+
+        // Stock must not be touched for a draft
+        expect($product->fresh()->stock_quantity)->toBe(10);
+        $this->assertDatabaseMissing('stock_movements', ['product_id' => $product->id]);
+    });
+
+    it('defaults to issued when status is omitted', function () {
+        actingAsInvoiceUser();
+
+        $response = $this->postJson(API_INVOICES, invoicePayload())->assertStatus(201);
+
+        expect($response->json('data.status'))->toBe('issued');
+    });
+
+    it('rejects an invalid status value', function () {
+        actingAsInvoiceUser();
+
+        $this->postJson(API_INVOICES, invoicePayload(['status' => 'paid']))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['status']);
+    });
+
     it('auto-generates the invoice_number server-side', function () {
         actingAsInvoiceUser();
 
@@ -329,6 +367,208 @@ describe('GET /invoices/{id}', function () {
         $invoice = Invoice::factory()->create();
 
         $this->getJson(API_INVOICES."/{$invoice->id}")->assertStatus(401);
+    });
+});
+
+// ─── Update (draft only) ──────────────────────────────────────────────────────
+
+describe('PUT /invoices/{id}', function () {
+    it('updates a draft invoice fields', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+        $newCustomer = Customer::factory()->create();
+
+        $this->putJson(API_INVOICES."/{$invoice->id}", [
+            'customer_id' => $newCustomer->id,
+            'due_date' => '2026-12-31',
+        ])
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Invoice updated successfully.',
+                'data' => ['customer' => ['id' => $newCustomer->id]],
+            ]);
+
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'customer_id' => $newCustomer->id]);
+    });
+
+    it('replaces line items when items are provided', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+        $newProduct = Product::factory()->create(['stock_quantity' => 20, 'unit_price' => 30.00]);
+
+        $this->putJson(API_INVOICES."/{$invoice->id}", [
+            'items' => [
+                ['product_id' => $newProduct->id, 'unit_price' => 30.00, 'quantity' => 4],
+            ],
+        ])
+            ->assertStatus(200)
+            ->assertJson([
+                'data' => ['subtotal' => '120.00', 'total' => '120.00'],
+            ]);
+
+        // Stock must still be untouched — draft has not been issued
+        expect($newProduct->fresh()->stock_quantity)->toBe(20);
+    });
+
+    it('rejects updating a non-draft invoice', function () {
+        $user = actingAsInvoiceUser();
+
+        foreach (['issued', 'paid', 'cancelled'] as $status) {
+            $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => $status]);
+
+            $this->putJson(API_INVOICES."/{$invoice->id}", ['due_date' => '2026-12-31'])
+                ->assertStatus(422)
+                ->assertJson(['message' => 'Only draft invoices can be updated.']);
+        }
+    });
+
+    it('returns 404 when invoice does not exist', function () {
+        actingAsInvoiceUser();
+
+        $this->putJson(API_INVOICES.'/non-existent-uuid', ['due_date' => '2026-12-31'])
+            ->assertStatus(404);
+    });
+
+    it('returns 401 when unauthenticated', function () {
+        $invoice = Invoice::factory()->create(['status' => 'draft']);
+
+        $this->putJson(API_INVOICES."/{$invoice->id}", [])->assertStatus(401);
+    });
+});
+
+// ─── Issue ────────────────────────────────────────────────────────────────────
+
+describe('POST /invoices/{id}/issue', function () {
+    it('transitions a draft invoice to issued and deducts stock', function () {
+        $user = actingAsInvoiceUser();
+        $product = Product::factory()->create(['stock_quantity' => 15, 'unit_price' => 40.00]);
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+        $invoice->items()->create([
+            'product_id' => $product->id,
+            'unit_price' => 40.00,
+            'quantity' => 5,
+            'amount' => 200.00,
+        ]);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/issue")
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Invoice issued successfully.',
+                'data' => ['id' => $invoice->id, 'status' => 'issued'],
+            ]);
+
+        expect($product->fresh()->stock_quantity)->toBe(10);
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'type' => 'sale',
+            'quantity' => 5,
+            'stock_before' => 15,
+            'stock_after' => 10,
+        ]);
+    });
+
+    it('rejects issuing a non-draft invoice', function () {
+        $user = actingAsInvoiceUser();
+
+        foreach (['issued', 'paid', 'cancelled'] as $status) {
+            $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => $status]);
+
+            $this->postJson(API_INVOICES."/{$invoice->id}/issue")
+                ->assertStatus(422)
+                ->assertJson(['message' => 'Only draft invoices can be issued.']);
+        }
+    });
+
+    it('rejects issuing when a product has insufficient stock', function () {
+        $user = actingAsInvoiceUser();
+        $product = Product::factory()->create(['stock_quantity' => 1, 'unit_price' => 10.00]);
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+        $invoice->items()->create([
+            'product_id' => $product->id,
+            'unit_price' => 10.00,
+            'quantity' => 5,
+            'amount' => 50.00,
+        ]);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/issue")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['items']);
+
+        // Invoice must remain draft, stock unchanged
+        expect($invoice->fresh()->status)->toBe('draft');
+        expect($product->fresh()->stock_quantity)->toBe(1);
+    });
+
+    it('returns 404 for an unknown invoice', function () {
+        actingAsInvoiceUser();
+
+        $this->postJson(API_INVOICES.'/non-existent-uuid/issue')->assertStatus(404);
+    });
+
+    it('returns 401 when unauthenticated', function () {
+        $invoice = Invoice::factory()->create(['status' => 'draft']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/issue")->assertStatus(401);
+    });
+});
+
+// ─── Cancel ───────────────────────────────────────────────────────────────────
+
+describe('POST /invoices/{id}/cancel', function () {
+    it('cancels a draft invoice', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Invoice cancelled successfully.',
+                'data' => ['id' => $invoice->id, 'status' => 'cancelled'],
+            ]);
+
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'cancelled']);
+    });
+
+    it('cancels an issued invoice', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'issued']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")
+            ->assertStatus(200)
+            ->assertJson(['data' => ['status' => 'cancelled']]);
+    });
+
+    it('rejects cancelling a paid invoice', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")
+            ->assertStatus(422)
+            ->assertJson(['message' => 'Paid invoices cannot be cancelled.']);
+    });
+
+    it('rejects cancelling an already-cancelled invoice', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'cancelled']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")
+            ->assertStatus(422)
+            ->assertJson(['message' => 'Invoice is already cancelled.']);
+    });
+
+    it('returns 404 for an unknown invoice', function () {
+        actingAsInvoiceUser();
+
+        $this->postJson(API_INVOICES.'/non-existent-uuid/cancel')->assertStatus(404);
+    });
+
+    it('returns 401 when unauthenticated', function () {
+        $invoice = Invoice::factory()->create(['status' => 'issued']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")->assertStatus(401);
     });
 });
 

@@ -21,6 +21,7 @@ class StoreInvoiceRequest extends FormRequest
             'customer_id' => ['required', 'uuid', 'exists:customers,id'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:issue_date'],
+            'status' => ['sometimes', 'string', 'in:draft,issued'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'uuid', 'exists:products,id'],
             'items.*.description' => ['nullable', 'string', 'max:500'],

@@ -26,14 +26,35 @@ class InvoiceFactory extends Factory
             'due_date' => fake()->dateTimeBetween($issueDate, '+30 days'),
             'subtotal' => 0,
             'total' => 0,
-            'status' => fake()->randomElement(['issued', 'paid', 'overdue']),
+            'status' => fake()->randomElement(['draft', 'issued', 'paid', 'cancelled']),
         ];
+    }
+
+    public function draft(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'draft',
+        ]);
+    }
+
+    public function issued(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'issued',
+        ]);
     }
 
     public function paid(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'paid',
+        ]);
+    }
+
+    public function cancelled(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'cancelled',
         ]);
     }
 

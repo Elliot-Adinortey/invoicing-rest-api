@@ -15,14 +15,18 @@ interface InvoiceServiceInterface
     public function find(string $id): Invoice;
 
     /**
-     * @param  array{invoice_number?: string, customer_id?: string, user_id?: string, issue_date?: string, due_date?: string, subtotal?: string, total?: string, status?: string}  $data
+     * @param  array{customer_id: string, user_id: string, issue_date: string, due_date: string, status?: string, items: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
+     */
+    public function create(array $data): Invoice;
+
+    /**
+     * @param  array{customer_id?: string, issue_date?: string, due_date?: string, items?: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
      */
     public function update(Invoice $invoice, array $data): Invoice;
 
-    /**
-     * @param  array{customer_id: string, user_id: string, issue_date: string, due_date: string, items: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
-     */
-    public function create(array $data): Invoice;
+    public function issue(Invoice $invoice): Invoice;
+
+    public function cancel(Invoice $invoice): Invoice;
 
     public function destroy(Invoice $invoice): void;
 

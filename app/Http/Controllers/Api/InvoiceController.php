@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Contracts\Invoice\InvoiceServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Support\ApiResponse;
@@ -178,6 +179,72 @@ class InvoiceController extends Controller
         $this->invoiceService->destroy($invoice);
 
         return ApiResponse::success(null, 'Invoice deleted successfully.');
+    }
+
+    /**
+     * Update a draft invoice.
+     *
+     * @group Invoices
+     *
+     * @authenticated
+     *
+     * @urlParam id string required The invoice UUID. Example: uuid
+     *
+     * @bodyParam customer_id string optional Example: uuid
+     * @bodyParam issue_date date optional Example: 2026-04-01
+     * @bodyParam due_date date optional Example: 2026-04-30
+     * @bodyParam items array optional Replaces all existing line items when provided.
+     * @bodyParam items[].product_id string required Example: uuid
+     * @bodyParam items[].description string optional Example: Widget
+     * @bodyParam items[].unit_price numeric required Example: 50.00
+     * @bodyParam items[].quantity integer required Example: 2
+     *
+     * @response 200 {"data": {}, "message": "Invoice updated successfully.", "status": "success", "status_code": 200}
+     * @response 422 {"message": "Only draft invoices can be updated.", "status": "error", "status_code": 422}
+     */
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice): JsonResponse
+    {
+        $invoice = $this->invoiceService->update($invoice, $request->validated());
+
+        return ApiResponse::success(new InvoiceResource($invoice), 'Invoice updated successfully.');
+    }
+
+    /**
+     * Issue a draft invoice, committing stock.
+     *
+     * @group Invoices
+     *
+     * @authenticated
+     *
+     * @urlParam id string required The invoice UUID. Example: uuid
+     *
+     * @response 200 {"data": {"status": "issued"}, "message": "Invoice issued successfully.", "status": "success", "status_code": 200}
+     * @response 422 {"message": "Only draft invoices can be issued.", "status": "error", "status_code": 422}
+     */
+    public function issue(Invoice $invoice): JsonResponse
+    {
+        $invoice = $this->invoiceService->issue($invoice);
+
+        return ApiResponse::success(new InvoiceResource($invoice), 'Invoice issued successfully.');
+    }
+
+    /**
+     * Cancel a draft or issued invoice.
+     *
+     * @group Invoices
+     *
+     * @authenticated
+     *
+     * @urlParam id string required The invoice UUID. Example: uuid
+     *
+     * @response 200 {"data": {"status": "cancelled"}, "message": "Invoice cancelled successfully.", "status": "success", "status_code": 200}
+     * @response 422 {"message": "Paid invoices cannot be cancelled.", "status": "error", "status_code": 422}
+     */
+    public function cancel(Invoice $invoice): JsonResponse
+    {
+        $invoice = $this->invoiceService->cancel($invoice);
+
+        return ApiResponse::success(new InvoiceResource($invoice), 'Invoice cancelled successfully.');
     }
 
     /**

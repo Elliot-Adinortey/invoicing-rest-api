@@ -42,7 +42,7 @@ class InvoiceService implements InvoiceServiceInterface
     }
 
     /**
-     * @param  array{customer_id: string, user_id: string, issue_date: string, due_date: string, items: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
+     * @param  array{customer_id: string, user_id: string, issue_date: string, due_date: string, status?: string, items: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
      */
     public function create(array $data): Invoice
     {
@@ -50,10 +50,13 @@ class InvoiceService implements InvoiceServiceInterface
             $items = $data['items'];
             unset($data['items']);
 
+            $status = $data['status'] ?? 'issued';
+            unset($data['status']);
+
             $subtotal = collect($items)->sum(fn (array $item) => $item['unit_price'] * $item['quantity']);
 
             $invoice = Invoice::create(array_merge([
-                'status' => 'issued',
+                'status' => $status,
                 'invoice_number' => $this->generateInvoiceNumber(),
             ], $data, [
                 'subtotal' => $subtotal,
@@ -61,42 +64,56 @@ class InvoiceService implements InvoiceServiceInterface
             ]));
 
             foreach ($items as $item) {
-                /** @var Product $product */
-                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-
-                $quantity = (int) $item['quantity'];
-
-                if ($product->stock_quantity < $quantity) {
-                    throw ValidationException::withMessages([
-                        'items' => ["Insufficient stock for product '{$product->product_name}'. Available: {$product->stock_quantity}, requested: {$quantity}."],
-                    ]);
-                }
-
-                $stockBefore = $product->stock_quantity;
-                $stockAfter = $stockBefore - $quantity;
-
                 $invoice->items()->create([
                     'product_id' => $item['product_id'],
-                    'description' => $item['description'] ?? $product->description,
+                    'description' => $item['description'] ?? null,
                     'unit_price' => $item['unit_price'],
-                    'quantity' => $quantity,
-                    'amount' => $item['unit_price'] * $quantity,
+                    'quantity' => (int) $item['quantity'],
+                    'amount' => $item['unit_price'] * $item['quantity'],
                 ]);
+            }
 
-                $product->decrement('stock_quantity', $quantity);
-
-                $invoice->stockMovements()->create([
-                    'product_id' => $item['product_id'],
-                    'type' => 'sale',
-                    'quantity' => $quantity,
-                    'stock_before' => $stockBefore,
-                    'stock_after' => $stockAfter,
-                    'description' => "Sale via invoice {$invoice->invoice_number}",
-                ]);
+            // Only deduct stock when the invoice is immediately issued
+            if ($status === 'issued') {
+                $this->deductStock($invoice);
             }
 
             return $invoice->load(['customer', 'user', 'items.product']);
         });
+    }
+
+    /**
+     * Deduct stock for all items on an invoice and record stock movements.
+     * Must be called inside a transaction.
+     */
+    private function deductStock(Invoice $invoice): void
+    {
+        foreach ($invoice->items as $item) {
+            /** @var Product $product */
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
+
+            $quantity = $item->quantity;
+
+            if ($product->stock_quantity < $quantity) {
+                throw ValidationException::withMessages([
+                    'items' => ["Insufficient stock for product '{$product->product_name}'. Available: {$product->stock_quantity}, requested: {$quantity}."],
+                ]);
+            }
+
+            $stockBefore = $product->stock_quantity;
+            $stockAfter = $stockBefore - $quantity;
+
+            $product->decrement('stock_quantity', $quantity);
+
+            $invoice->stockMovements()->create([
+                'product_id' => $item->product_id,
+                'type' => 'sale',
+                'quantity' => $quantity,
+                'stock_before' => $stockBefore,
+                'stock_after' => $stockAfter,
+                'description' => "Sale via invoice {$invoice->invoice_number}",
+            ]);
+        }
     }
 
     private function generateInvoiceNumber(): string
@@ -112,11 +129,77 @@ class InvoiceService implements InvoiceServiceInterface
     }
 
     /**
-     * @param  array{invoice_number?: string, customer_id?: string, user_id?: string, issue_date?: string, due_date?: string, subtotal?: string, total?: string, status?: string}  $data
+     * Update a draft invoice's fields and/or replace its line items.
+     *
+     * @param  array{customer_id?: string, issue_date?: string, due_date?: string, items?: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
      */
     public function update(Invoice $invoice, array $data): Invoice
     {
-        $invoice->update($data);
+        if ($invoice->status !== 'draft') {
+            throw new HttpException(422, 'Only draft invoices can be updated.');
+        }
+
+        return DB::transaction(function () use ($invoice, $data) {
+            if (isset($data['items'])) {
+                $items = $data['items'];
+                unset($data['items']);
+
+                $subtotal = collect($items)->sum(fn (array $item) => $item['unit_price'] * $item['quantity']);
+                $data['subtotal'] = $subtotal;
+                $data['total'] = $subtotal;
+
+                // Replace all line items
+                $invoice->items()->delete();
+
+                foreach ($items as $item) {
+                    $invoice->items()->create([
+                        'product_id' => $item['product_id'],
+                        'description' => $item['description'] ?? null,
+                        'unit_price' => $item['unit_price'],
+                        'quantity' => (int) $item['quantity'],
+                        'amount' => $item['unit_price'] * $item['quantity'],
+                    ]);
+                }
+            }
+
+            $invoice->update($data);
+
+            return $invoice->refresh()->load(['customer', 'user', 'items.product']);
+        });
+    }
+
+    /**
+     * Transition a draft invoice to issued, deducting stock.
+     */
+    public function issue(Invoice $invoice): Invoice
+    {
+        if ($invoice->status !== 'draft') {
+            throw new HttpException(422, 'Only draft invoices can be issued.');
+        }
+
+        return DB::transaction(function () use ($invoice) {
+            $invoice->load('items');
+            $this->deductStock($invoice);
+            $invoice->update(['status' => 'issued']);
+
+            return $invoice->refresh()->load(['customer', 'user', 'items.product']);
+        });
+    }
+
+    /**
+     * Cancel an invoice. Only draft or issued invoices can be cancelled.
+     */
+    public function cancel(Invoice $invoice): Invoice
+    {
+        if ($invoice->status === 'paid') {
+            throw new HttpException(422, 'Paid invoices cannot be cancelled.');
+        }
+
+        if ($invoice->status === 'cancelled') {
+            throw new HttpException(422, 'Invoice is already cancelled.');
+        }
+
+        $invoice->update(['status' => 'cancelled']);
 
         return $invoice->refresh()->load(['customer', 'user', 'items.product']);
     }
