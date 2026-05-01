@@ -9,6 +9,7 @@ use App\Http\Resources\InvoiceResource;
 use App\Models\Invoice;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
@@ -53,9 +54,9 @@ class InvoiceController extends Controller
      *     "status_code": 200
      * }
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $invoices = $this->invoiceService->paginate();
+        $invoices = $this->invoiceService->paginate($request->query('status'));
 
         return ApiResponse::success(
             InvoiceResource::collection($invoices)->response()->getData(true),
@@ -145,7 +146,6 @@ class InvoiceController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Invoice not found.",
      *     "status": "error",
@@ -162,65 +162,6 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Update a specific invoice.
-     *
-     * @group Invoices
-     *
-     * @authenticated
-     *
-     * @urlParam id int required Example: 1
-     *
-     * @bodyParam customer_id string optional Example: uuid
-     * @bodyParam issue_date date optional Example: 2023-10-26
-     * @bodyParam due_date date optional Example: 2023-11-26
-     * @bodyParam status string optional Example: pending
-     * @bodyParam items array optional Example: [
-     *     {
-     *         "product_id": "uuid",
-     *         "description": "Product Description",
-     *         "unit_price": "100.00",
-     *         "quantity": 1
-     *     }
-     * ]
-     *
-     * @response 200 {
-     *     "data": {
-     *         "id": "uuid",
-     *         "invoice_number": "INV-001",
-     *         "customer_id": "uuid",
-     *         "issue_date": "2023-10-26",
-     *         "due_date": "2023-11-26",
-     *         "subtotal": "100.00",
-     *         "tax": "10.00",
-     *         "total": "110.00",
-     *         "status": "pending",
-     *         "created_at": "datetime",
-     *         "updated_at": "datetime"
-     *     },
-     *     "message": "Invoice updated successfully.",
-     *     "status": "success",
-     *     "status_code": 200
-     * }
-     *
-     * @response 404 {
-     *     "message": "Invoice not found.",
-     *     "status": "error",
-     *     "status_code": 404,
-     *     "errors": [],
-     *     "code": "NOT_FOUND"
-     * }
-     */
-    public function update(Invoice $invoice): JsonResponse
-    {
-        return ApiResponse::error(
-            message: 'Invoice update is not supported.',
-            errors: [],
-            status: 405,
-            code: 'METHOD_NOT_ALLOWED'
-        );
-    }
-    
-    /**
      * Remove a specific invoice.
      *
      * @group Invoices
@@ -235,7 +176,6 @@ class InvoiceController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Invoice not found.",
      *     "status": "error",
@@ -250,7 +190,7 @@ class InvoiceController extends Controller
 
         return ApiResponse::success(null, 'Invoice deleted successfully.');
     }
-    
+
     /**
      * Mark an invoice as paid.
      *
@@ -278,7 +218,6 @@ class InvoiceController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Invoice not found.",
      *     "status": "error",

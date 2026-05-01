@@ -32,7 +32,6 @@ function invoicePayload(array $overrides = []): array
     $customer = Customer::factory()->create();
 
     return array_merge([
-        'invoice_number' => 'INV-TEST-001',
         'customer_id' => $customer->id,
         'issue_date' => '2026-04-01',
         'due_date' => '2026-04-30',
@@ -69,6 +68,21 @@ describe('GET /invoices', function () {
             ->assertJson(['success' => true, 'status_code' => 200]);
     });
 
+    it('filters invoices by status', function () {
+        $user = actingAsInvoiceUser();
+        Invoice::factory()->create(['user_id' => $user->id, 'status' => 'issued']);
+        Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
+        Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
+
+        $response = $this->getJson(API_INVOICES.'?status=paid')->assertStatus(200);
+
+        expect($response->json('data.meta.total'))->toBe(2);
+
+        collect($response->json('data.data'))->each(
+            fn ($invoice) => expect($invoice['status'])->toBe('paid')
+        );
+    });
+
     it('returns 401 when unauthenticated', function () {
         $this->getJson(API_INVOICES)->assertStatus(401);
     });
@@ -94,19 +108,24 @@ describe('POST /invoices', function () {
                 'success' => true,
                 'message' => 'Invoice created successfully.',
                 'data' => [
-                    'invoice_number' => 'INV-TEST-001',
                     'status' => 'issued',
                     'subtotal' => '200.00',
                     'total' => '200.00',
                 ],
             ]);
 
-        $this->assertDatabaseHas('invoices', [
-            'invoice_number' => 'INV-TEST-001',
-            'user_id' => $user->id,
-        ]);
-
+        $this->assertDatabaseHas('invoices', ['user_id' => $user->id, 'status' => 'issued']);
         $this->assertDatabaseHas('invoice_items', ['quantity' => 2, 'amount' => 200.00]);
+    });
+
+    it('auto-generates the invoice_number server-side', function () {
+        actingAsInvoiceUser();
+
+        $response = $this->postJson(API_INVOICES, invoicePayload())->assertStatus(201);
+
+        $invoiceNumber = $response->json('data.invoice_number');
+        expect($invoiceNumber)->toStartWith('INV-');
+        $this->assertDatabaseHas('invoices', ['invoice_number' => $invoiceNumber]);
     });
 
     it('decrements product stock when invoice is created', function () {
@@ -115,7 +134,6 @@ describe('POST /invoices', function () {
         $customer = Customer::factory()->create();
 
         $this->postJson(API_INVOICES, [
-            'invoice_number' => 'INV-STOCK-001',
             'customer_id' => $customer->id,
             'issue_date' => '2026-04-01',
             'due_date' => '2026-04-30',
@@ -133,7 +151,6 @@ describe('POST /invoices', function () {
         $customer = Customer::factory()->create();
 
         $this->postJson(API_INVOICES, [
-            'invoice_number' => 'INV-MOVE-001',
             'customer_id' => $customer->id,
             'issue_date' => '2026-04-01',
             'due_date' => '2026-04-30',
@@ -151,25 +168,27 @@ describe('POST /invoices', function () {
         ]);
     });
 
+    it('rejects an invoice when requested quantity exceeds available stock', function () {
+        actingAsInvoiceUser();
+        $product = Product::factory()->create(['stock_quantity' => 2, 'unit_price' => 50.00]);
+        $customer = Customer::factory()->create();
+
+        $this->postJson(API_INVOICES, [
+            'customer_id' => $customer->id,
+            'issue_date' => '2026-04-01',
+            'due_date' => '2026-04-30',
+            'items' => [
+                ['product_id' => $product->id, 'unit_price' => 50.00, 'quantity' => 10],
+            ],
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['items']);
+
+        // Stock must remain unchanged
+        expect($product->fresh()->stock_quantity)->toBe(2);
+    });
+
     it('returns 401 when unauthenticated', function () {
         $this->postJson(API_INVOICES, invoicePayload())->assertStatus(401);
-    });
-
-    it('fails when invoice_number is missing', function () {
-        actingAsInvoiceUser();
-
-        $this->postJson(API_INVOICES, invoicePayload(['invoice_number' => '']))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['invoice_number']);
-    });
-
-    it('fails when invoice_number is a duplicate', function () {
-        $user = actingAsInvoiceUser();
-        Invoice::factory()->create(['invoice_number' => 'INV-DUP-001', 'user_id' => $user->id]);
-
-        $this->postJson(API_INVOICES, invoicePayload(['invoice_number' => 'INV-DUP-001']))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors(['invoice_number']);
     });
 
     it('fails when customer_id does not exist', function () {

@@ -8,12 +8,14 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceService implements InvoiceServiceInterface
 {
-    public function paginate(): LengthAwarePaginator
+    public function paginate(?string $status = null): LengthAwarePaginator
     {
         return Invoice::with(['customer', 'user', 'items.product'])
+            ->when($status, fn ($query) => $query->where('status', $status))
             ->latest()
             ->paginate(15);
     }
@@ -28,7 +30,7 @@ class InvoiceService implements InvoiceServiceInterface
     }
 
     /**
-     * @param  array{invoice_number: string, customer_id: string, user_id: string, issue_date: string, due_date: string, subtotal: string, total: string, status: string, items: array{product_id: string, description: string, unit_price: string, quantity: string, amount: string}[]}  $data
+     * @param  array{customer_id: string, user_id: string, issue_date: string, due_date: string, items: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
      */
     public function create(array $data): Invoice
     {
@@ -40,16 +42,25 @@ class InvoiceService implements InvoiceServiceInterface
 
             $invoice = Invoice::create(array_merge([
                 'status' => 'issued',
+                'invoice_number' => $this->generateInvoiceNumber(),
             ], $data, [
                 'subtotal' => $subtotal,
                 'total' => $subtotal,
             ]));
 
             foreach ($items as $item) {
-                $product = Product::findOrFail($item['product_id']);
+                /** @var Product $product */
+                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
+
+                $quantity = (int) $item['quantity'];
+
+                if ($product->stock_quantity < $quantity) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Insufficient stock for product '{$product->product_name}'. Available: {$product->stock_quantity}, requested: {$quantity}."],
+                    ]);
+                }
 
                 $stockBefore = $product->stock_quantity;
-                $quantity = (int) $item['quantity'];
                 $stockAfter = $stockBefore - $quantity;
 
                 $invoice->items()->create([
@@ -74,6 +85,17 @@ class InvoiceService implements InvoiceServiceInterface
 
             return $invoice->load(['customer', 'user', 'items.product']);
         });
+    }
+
+    private function generateInvoiceNumber(): string
+    {
+        $prefix = 'INV-'.now()->format('Ymd').'-';
+        $latest = Invoice::withTrashed()
+            ->where('invoice_number', 'like', $prefix.'%')
+            ->lockForUpdate()
+            ->count();
+
+        return $prefix.str_pad($latest + 1, 4, '0', STR_PAD_LEFT);
     }
 
     /**

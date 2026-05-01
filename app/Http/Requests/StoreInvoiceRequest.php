@@ -18,11 +18,9 @@ class StoreInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'invoice_number' => ['required', 'string', 'max:255', 'unique:invoices,invoice_number'],
             'customer_id' => ['required', 'uuid', 'exists:customers,id'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:issue_date'],
-            'status' => ['sometimes', 'string', 'in:issued,paid,overdue'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'uuid', 'exists:products,id'],
             'items.*.description' => ['nullable', 'string', 'max:500'],

@@ -122,7 +122,6 @@ class CustomerController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Customer not found.",
      *     "status": "error",
@@ -131,10 +130,8 @@ class CustomerController extends Controller
      *     "code": "NOT_FOUND"
      * }
      */
-    public function show(string $id): JsonResponse
+    public function show(Customer $customer): JsonResponse
     {
-        $customer = $this->customerService->find($id);
-
         return ApiResponse::success(new CustomerResource($customer), 'Customer retrieved successfully.');
     }
 
@@ -166,7 +163,6 @@ class CustomerController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Customer not found.",
      *     "status": "error",
@@ -197,7 +193,6 @@ class CustomerController extends Controller
      *     "status": "success",
      *     "status_code": 200
      * }
-     *
      * @response 404 {
      *     "message": "Customer not found.",
      *     "status": "error",

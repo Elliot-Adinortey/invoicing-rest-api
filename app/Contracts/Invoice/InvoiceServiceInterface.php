@@ -7,7 +7,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface InvoiceServiceInterface
 {
-    public function paginate(): LengthAwarePaginator;
+    public function paginate(?string $status = null): LengthAwarePaginator;
 
     public function find(string $id): Invoice;
 
@@ -17,7 +17,7 @@ interface InvoiceServiceInterface
     public function update(Invoice $invoice, array $data): Invoice;
 
     /**
-     * @param  array{invoice_number: string, customer_id: string, user_id: string, issue_date: string, due_date: string, subtotal: string, total: string, status: string, items: array{product_id: string, description: string, unit_price: string, quantity: string, amount: string}[]}  $data
+     * @param  array{customer_id: string, user_id: string, issue_date: string, due_date: string, items: array{product_id: string, description?: string, unit_price: string, quantity: string}[]}  $data
      */
     public function create(array $data): Invoice;
 

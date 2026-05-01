@@ -14,6 +14,7 @@ class ApiResponse
         array $meta = []
     ): JsonResponse {
         $response = [
+            'success' => true,
             'message' => $message,
             'status' => $status,
             'status_code' => $status_code,
@@ -30,16 +31,16 @@ class ApiResponse
     public static function error(
         string $message = 'Request failed.',
         array $errors = [],
-        string $status = 'error',
-        int $status_code = 400,
+        int $status = 400,
         string $code = 'REQUEST_FAILED'
     ): JsonResponse {
         return response()->json([
+            'success' => false,
             'message' => $message,
-            'status' => $status,
-            'status_code' => $status_code,
+            'status' => 'error',
+            'status_code' => $status,
             'errors' => $errors,
             'code' => $code,
-        ], $status_code);
+        ], $status);
     }
 }
