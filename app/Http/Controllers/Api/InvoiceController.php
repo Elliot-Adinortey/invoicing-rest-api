@@ -47,6 +47,17 @@ class InvoiceController extends Controller
         return ApiResponse::success(new InvoiceResource($invoice), 'Invoice retrieved successfully.');
     }
 
+    public function update(Invoice $invoice): JsonResponse
+    {
+        return ApiResponse::error(
+            message: 'Invoice update is not supported.',
+            errors: [],
+            status: 405,
+            code: 'METHOD_NOT_ALLOWED'
+        );
+    }
+
+
     public function destroy(Invoice $invoice): JsonResponse
     {
         $this->invoiceService->destroy($invoice);
