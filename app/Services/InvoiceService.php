@@ -251,6 +251,10 @@ class InvoiceService implements InvoiceServiceInterface
 
     public function markAsPaid(Invoice $invoice): Invoice
     {
+        if ($invoice->status === 'draft') {
+            throw new HttpException(422, 'Draft invoices cannot be marked as paid. Issue the invoice first.');
+        }
+
         if ($invoice->status === 'paid') {
             throw new HttpException(422, 'Invoice is already paid.');
         }

@@ -675,6 +675,20 @@ describe('POST /invoices/{id}/mark-paid', function () {
         $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'paid']);
     });
 
+    it('rejects marking a draft invoice as paid', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
+            ->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Draft invoices cannot be marked as paid. Issue the invoice first.',
+            ]);
+
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'draft']);
+    });
+
     it('rejects marking an already-paid invoice as paid', function () {
         $user = actingAsInvoiceUser();
         $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
