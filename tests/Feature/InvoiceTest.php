@@ -146,6 +146,22 @@ describe('GET /invoices', function () {
     it('returns 401 when unauthenticated', function () {
         $this->getJson(API_INVOICES)->assertStatus(401);
     });
+
+    it('only returns invoices belonging to the authenticated user', function () {
+        $userA = actingAsInvoiceUser();
+        Invoice::factory()->count(2)->create(['user_id' => $userA->id]);
+
+        $userB = User::factory()->create();
+        Invoice::factory()->count(3)->create(['user_id' => $userB->id]);
+
+        $response = $this->getJson(API_INVOICES)->assertStatus(200);
+
+        // Only userA's 2 invoices should be visible
+        expect($response->json('data.meta.total'))->toBe(2);
+        collect($response->json('data.data'))->each(
+            fn ($invoice) => expect($invoice['user']['id'])->toBe($userA->id)
+        );
+    });
 });
 
 // ─── Store ────────────────────────────────────────────────────────────────────

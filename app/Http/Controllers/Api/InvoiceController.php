@@ -48,6 +48,8 @@ class InvoiceController extends Controller
             'per_page',
         ]);
 
+        $filters['user_id'] = $request->user()->id;
+
         $invoices = $this->invoiceService->paginate($filters);
 
         return ApiResponse::success(
