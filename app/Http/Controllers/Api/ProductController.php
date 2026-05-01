@@ -49,7 +49,6 @@ class ProductController extends Controller
      *
      * @bodyParam name string required Example: Product Name
      * @bodyParam description string optional Example: Product Description
-     * @bodyParam sku string required Example: SKU
      * @bodyParam price decimal required Example: 100.00
      * @bodyParam stock_quantity integer required Example: 10
      *
@@ -58,7 +57,6 @@ class ProductController extends Controller
      *         "id": "uuid",
      *         "name": "Product Name",
      *         "description": "Product Description",
-     *         "sku": "SKU",
      *         "price": "100.00",
      *         "stock_quantity": 10,
      *         "created_at": "datetime",
@@ -95,7 +93,6 @@ class ProductController extends Controller
      *         "id": "uuid",
      *         "name": "Product Name",
      *         "description": "Product Description",
-     *         "sku": "SKU",
      *         "price": "100.00",
      *         "stock_quantity": 10,
      *         "created_at": "datetime",
@@ -129,7 +126,6 @@ class ProductController extends Controller
      *
      * @bodyParam name string optional Example: Product Name
      * @bodyParam description string optional Example: Product Description
-     * @bodyParam sku string optional Example: SKU
      * @bodyParam price decimal optional Example: 100.00
      * @bodyParam stock_quantity integer optional Example: 10
      *
@@ -138,7 +134,6 @@ class ProductController extends Controller
      *         "id": "uuid",
      *         "name": "Updated Product Name",
      *         "description": "Updated Product Description",
-     *         "sku": "UPDATED_SKU",
      *         "price": "150.00",
      *         "stock_quantity": 20,
      *         "created_at": "datetime",
@@ -209,7 +204,6 @@ class ProductController extends Controller
      *         "id": "uuid",
      *         "name": "Product Name",
      *         "description": "Product Description",
-     *         "sku": "SKU",
      *         "price": "100.00",
      *         "stock_quantity": 20,
      *         "created_at": "datetime",
