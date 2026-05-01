@@ -90,13 +90,14 @@ class InvoiceService implements InvoiceServiceInterface
 
     private function generateInvoiceNumber(): string
     {
-        $prefix = 'INV-'.now()->format('Ymd').'-';
-        $latest = Invoice::withTrashed()
-            ->where('invoice_number', 'like', $prefix.'%')
-            ->lockForUpdate()
-            ->count();
+        if (DB::getDriverName() === 'pgsql') {
+            $sequence = DB::selectOne("SELECT nextval('invoice_number_seq') AS value")->value;
+        } else {
+            // SQLite fallback for testing — not used in production
+            $sequence = Invoice::withTrashed()->lockForUpdate()->count() + 1;
+        }
 
-        return $prefix.str_pad($latest + 1, 4, '0', STR_PAD_LEFT);
+        return 'INV-'.now()->format('Ymd').'-'.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
