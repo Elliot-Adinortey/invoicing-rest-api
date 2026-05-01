@@ -155,6 +155,7 @@ POST   /api/v1/invoices
 GET    /api/v1/invoices/{id}
 DELETE /api/v1/invoices/{id}
 POST   /api/v1/invoices/{id}/mark-paid
+PUT    /api/v1/invoices/{id}
 ```
 
 ---

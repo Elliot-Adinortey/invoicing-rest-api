@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Contracts\Auth\AuthServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,19 +33,12 @@ class AuthController extends Controller
      *     "data": {}
      * }
      */
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
-        $result = $this->authService->register($validated);
+        $result = $this->authService->register($request->validated());
 
         return ApiResponse::success($result, 'User registered successfully.', 'success', 201);
     }
-
 
     /**
      * Login with email and password.
@@ -71,7 +66,6 @@ class AuthController extends Controller
      *         "token": "personal_access_token"
      *     }
      * }
-     *
      * @response 401 {
      *     "message": "These credentials do not match our records.",
      *     "status": "error",
@@ -80,18 +74,12 @@ class AuthController extends Controller
      *     "code": "REQUEST_FAILED"
      * }
      */
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        $result = $this->authService->login($request->validated());
 
-        $result = $this->authService->login($validated);
-      
         return ApiResponse::success($result, 'Login successful.');
     }
-
 
     /**
      * Logout user.
