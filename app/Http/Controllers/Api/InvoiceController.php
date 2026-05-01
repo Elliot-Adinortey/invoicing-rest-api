@@ -35,6 +35,8 @@ class InvoiceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Invoice::class);
+
         $filters = $request->only([
             'status',
             'customer_id',
@@ -95,6 +97,8 @@ class InvoiceController extends Controller
      */
     public function store(StoreInvoiceRequest $request): JsonResponse
     {
+        $this->authorize('create', Invoice::class);
+
         $data = array_merge($request->validated(), [
             'user_id' => $request->user()->id,
         ]);
@@ -146,6 +150,8 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice): JsonResponse
     {
+        $this->authorize('view', $invoice);
+
         $invoice = $this->invoiceService->find($invoice->id);
 
         return ApiResponse::success(new InvoiceResource($invoice), 'Invoice retrieved successfully.');
@@ -176,6 +182,8 @@ class InvoiceController extends Controller
      */
     public function destroy(Invoice $invoice): JsonResponse
     {
+        $this->authorize('delete', $invoice);
+
         $this->invoiceService->destroy($invoice);
 
         return ApiResponse::success(null, 'Invoice deleted successfully.');
@@ -204,6 +212,8 @@ class InvoiceController extends Controller
      */
     public function update(UpdateInvoiceRequest $request, Invoice $invoice): JsonResponse
     {
+        $this->authorize('update', $invoice);
+
         $invoice = $this->invoiceService->update($invoice, $request->validated());
 
         return ApiResponse::success(new InvoiceResource($invoice), 'Invoice updated successfully.');
@@ -223,6 +233,8 @@ class InvoiceController extends Controller
      */
     public function issue(Invoice $invoice): JsonResponse
     {
+        $this->authorize('issue', $invoice);
+
         $invoice = $this->invoiceService->issue($invoice);
 
         return ApiResponse::success(new InvoiceResource($invoice), 'Invoice issued successfully.');
@@ -242,6 +254,8 @@ class InvoiceController extends Controller
      */
     public function cancel(Invoice $invoice): JsonResponse
     {
+        $this->authorize('cancel', $invoice);
+
         $invoice = $this->invoiceService->cancel($invoice);
 
         return ApiResponse::success(new InvoiceResource($invoice), 'Invoice cancelled successfully.');
@@ -284,6 +298,8 @@ class InvoiceController extends Controller
      */
     public function markAsPaid(Invoice $invoice): JsonResponse
     {
+        $this->authorize('markAsPaid', $invoice);
+
         $invoice = $this->invoiceService->markAsPaid($invoice);
 
         return ApiResponse::success(new InvoiceResource($invoice), 'Invoice marked as paid.');

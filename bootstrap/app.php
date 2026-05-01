@@ -1,6 +1,7 @@
 <?php
 
 use App\Support\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -39,6 +40,16 @@ return Application::configure(basePath: dirname(__DIR__))
                     message: 'Unauthenticated.',
                     status: 401,
                     code: 'UNAUTHENTICATED'
+                );
+            }
+        });
+
+        $exceptions->render(function (AuthorizationException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return ApiResponse::error(
+                    message: 'This action is unauthorized.',
+                    status: 403,
+                    code: 'UNAUTHORIZED'
                 );
             }
         });

@@ -30,6 +30,8 @@ class ProductController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Product::class);
+
         $filters = $request->only(['search', 'per_page']);
 
         $products = $this->productService->paginate($filters);
@@ -69,6 +71,8 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request): JsonResponse
     {
+        $this->authorize('create', Product::class);
+
         $product = $this->productService->create($request->validated());
 
         return ApiResponse::success(
@@ -112,6 +116,8 @@ class ProductController extends Controller
      */
     public function show(Product $product): JsonResponse
     {
+        $this->authorize('view', $product);
+
         return ApiResponse::success(new ProductResource($product), 'Product retrieved successfully.');
     }
 
@@ -153,6 +159,8 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
+        $this->authorize('update', $product);
+
         $product = $this->productService->update($product, $request->validated());
 
         return ApiResponse::success(new ProductResource($product), 'Product updated successfully.');
@@ -183,6 +191,8 @@ class ProductController extends Controller
      */
     public function destroy(Product $product): JsonResponse
     {
+        $this->authorize('delete', $product);
+
         $this->productService->delete($product);
 
         return ApiResponse::success(null, 'Product deleted successfully.');
@@ -223,6 +233,8 @@ class ProductController extends Controller
      */
     public function restock(RestockProductRequest $request, Product $product): JsonResponse
     {
+        $this->authorize('restock', $product);
+
         $product = $this->productService->restock($product, $request->validated());
 
         return ApiResponse::success(new ProductResource($product), 'Product restocked successfully.');

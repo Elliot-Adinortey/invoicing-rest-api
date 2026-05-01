@@ -29,6 +29,8 @@ class CustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Customer::class);
+
         $filters = $request->only(['search', 'per_page']);
 
         $customers = $this->customerService->paginate($filters);
@@ -68,6 +70,8 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request): JsonResponse
     {
+        $this->authorize('create', Customer::class);
+
         $customer = $this->customerService->create($request->validated());
 
         return ApiResponse::success(
@@ -111,6 +115,8 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer): JsonResponse
     {
+        $this->authorize('view', $customer);
+
         return ApiResponse::success(new CustomerResource($customer), 'Customer retrieved successfully.');
     }
 
@@ -152,6 +158,8 @@ class CustomerController extends Controller
      */
     public function update(UpdateCustomerRequest $request, Customer $customer): JsonResponse
     {
+        $this->authorize('update', $customer);
+
         $customer = $this->customerService->update($customer, $request->validated());
 
         return ApiResponse::success(new CustomerResource($customer), 'Customer updated successfully.');
@@ -182,6 +190,8 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer): JsonResponse
     {
+        $this->authorize('delete', $customer);
+
         $this->customerService->delete($customer);
 
         return ApiResponse::success(null, 'Customer deleted successfully.');
