@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 uses(RefreshDatabase::class);
 
@@ -12,7 +13,7 @@ const API_LOGOUT = '/api/v1/logout';
 // ─── Register ────────────────────────────────────────────────────────────────
 
 describe('register', function () {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     it('registers a new user and returns a token', function () {
         $response = $this->postJson(API_REGISTER, [
             'name' => 'John Doe',
@@ -81,7 +82,7 @@ describe('register', function () {
 // ─── Login ────────────────────────────────────────────────────────────────────
 
 describe('login', function () {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     it('logs in a user with correct credentials and returns a token', function () {
         User::factory()->create([
             'email' => 'user@example.com',
@@ -116,16 +117,24 @@ describe('login', function () {
         $this->postJson(API_LOGIN, [
             'email' => 'user@example.com',
             'password' => 'wrong-password',
-        ])->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
+        ])->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 401,
+                'message' => 'Invalid login credentials.',
+            ]);
     });
 
     it('fails when email does not exist', function () {
         $this->postJson(API_LOGIN, [
             'email' => 'nobody@example.com',
             'password' => 'password',
-        ])->assertStatus(422)
-            ->assertJsonValidationErrors(['email']);
+        ])->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'status_code' => 401,
+                'message' => 'Invalid login credentials.',
+            ]);
     });
 
     it('fails when required fields are missing', function () {
@@ -138,7 +147,7 @@ describe('login', function () {
 // ─── Logout ───────────────────────────────────────────────────────────────────
 
 describe('logout', function () {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     it('logs out an authenticated user and deletes the token from the database', function () {
         $user = User::factory()->create();
         $tokenResult = $user->createToken('api-token');

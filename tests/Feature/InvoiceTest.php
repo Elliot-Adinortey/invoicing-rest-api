@@ -277,13 +277,27 @@ describe('GET /invoices/{id}', function () {
 describe('DELETE /invoices/{id}', function () {
     it('soft-deletes an invoice', function () {
         $user = actingAsInvoiceUser();
-        $invoice = Invoice::factory()->create(['user_id' => $user->id]);
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'issued']);
 
         $this->deleteJson(API_INVOICES."/{$invoice->id}")
             ->assertStatus(200)
             ->assertJson(['success' => true, 'message' => 'Invoice deleted successfully.']);
 
         $this->assertSoftDeleted('invoices', ['id' => $invoice->id]);
+    });
+
+    it('prevents deleting a paid invoice', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
+
+        $this->deleteJson(API_INVOICES."/{$invoice->id}")
+            ->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Paid invoices cannot be deleted.',
+            ]);
+
+        $this->assertDatabaseHas('invoices', ['id' => $invoice->id]);
     });
 
     it('returns 404 when invoice does not exist', function () {
@@ -315,6 +329,30 @@ describe('POST /invoices/{id}/mark-paid', function () {
             ]);
 
         $this->assertDatabaseHas('invoices', ['id' => $invoice->id, 'status' => 'paid']);
+    });
+
+    it('rejects marking an already-paid invoice as paid', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
+            ->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Invoice is already paid.',
+            ]);
+    });
+
+    it('rejects marking a cancelled invoice as paid', function () {
+        $user = actingAsInvoiceUser();
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'cancelled']);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/mark-paid")
+            ->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Cancelled invoices cannot be marked as paid.',
+            ]);
     });
 
     it('returns 404 for an unknown invoice', function () {

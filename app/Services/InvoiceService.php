@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class InvoiceService implements InvoiceServiceInterface
 {
@@ -110,11 +111,23 @@ class InvoiceService implements InvoiceServiceInterface
 
     public function destroy(Invoice $invoice): void
     {
+        if ($invoice->status === 'paid') {
+            throw new HttpException(422, 'Paid invoices cannot be deleted.');
+        }
+
         $invoice->deleteOrFail();
     }
 
     public function markAsPaid(Invoice $invoice): Invoice
     {
+        if ($invoice->status === 'paid') {
+            throw new HttpException(422, 'Invoice is already paid.');
+        }
+
+        if ($invoice->status === 'cancelled') {
+            throw new HttpException(422, 'Cancelled invoices cannot be marked as paid.');
+        }
+
         $invoice->update(['status' => 'paid']);
 
         return $invoice->refresh()->load(['customer', 'user', 'items.product']);
