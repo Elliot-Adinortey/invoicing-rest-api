@@ -90,7 +90,7 @@ php artisan serve
 
 ```txt
 Email: test@example.com
-Password: password123
+Password: password
 ```
 
 ---
