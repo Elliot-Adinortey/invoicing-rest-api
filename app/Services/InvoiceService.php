@@ -188,6 +188,7 @@ class InvoiceService implements InvoiceServiceInterface
 
     /**
      * Cancel an invoice. Only draft or issued invoices can be cancelled.
+     * Stock is restored when cancelling an issued invoice.
      */
     public function cancel(Invoice $invoice): Invoice
     {
@@ -199,9 +200,44 @@ class InvoiceService implements InvoiceServiceInterface
             throw new HttpException(422, 'Invoice is already cancelled.');
         }
 
-        $invoice->update(['status' => 'cancelled']);
+        return DB::transaction(function () use ($invoice) {
+            if ($invoice->status === 'issued') {
+                $this->restoreStock($invoice);
+            }
 
-        return $invoice->refresh()->load(['customer', 'user', 'items.product']);
+            $invoice->update(['status' => 'cancelled']);
+
+            return $invoice->refresh()->load(['customer', 'user', 'items.product']);
+        });
+    }
+
+    /**
+     * Restore stock for all items on an issued invoice and record stock movements.
+     * Must be called inside a transaction.
+     */
+    private function restoreStock(Invoice $invoice): void
+    {
+        $invoice->loadMissing('items');
+
+        foreach ($invoice->items as $item) {
+            /** @var Product $product */
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
+
+            $quantity = $item->quantity;
+            $stockBefore = $product->stock_quantity;
+            $stockAfter = $stockBefore + $quantity;
+
+            $product->increment('stock_quantity', $quantity);
+
+            $invoice->stockMovements()->create([
+                'product_id' => $item->product_id,
+                'type' => 'cancellation',
+                'quantity' => $quantity,
+                'stock_before' => $stockBefore,
+                'stock_after' => $stockAfter,
+                'description' => "Stock restored via cancellation of invoice {$invoice->invoice_number}",
+            ]);
+        }
     }
 
     public function destroy(Invoice $invoice): void

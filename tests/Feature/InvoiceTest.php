@@ -541,6 +541,50 @@ describe('POST /invoices/{id}/cancel', function () {
             ->assertJson(['data' => ['status' => 'cancelled']]);
     });
 
+    it('restores stock when cancelling an issued invoice', function () {
+        $user = actingAsInvoiceUser();
+        $product = Product::factory()->create(['stock_quantity' => 8, 'unit_price' => 50.00]);
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'issued']);
+        $invoice->items()->create([
+            'product_id' => $product->id,
+            'unit_price' => 50.00,
+            'quantity' => 3,
+            'amount' => 150.00,
+        ]);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")->assertStatus(200);
+
+        expect($product->fresh()->stock_quantity)->toBe(11);
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id' => $product->id,
+            'type' => 'cancellation',
+            'quantity' => 3,
+            'stock_before' => 8,
+            'stock_after' => 11,
+        ]);
+    });
+
+    it('does not restore stock when cancelling a draft invoice', function () {
+        $user = actingAsInvoiceUser();
+        $product = Product::factory()->create(['stock_quantity' => 10, 'unit_price' => 50.00]);
+        $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'draft']);
+        $invoice->items()->create([
+            'product_id' => $product->id,
+            'unit_price' => 50.00,
+            'quantity' => 3,
+            'amount' => 150.00,
+        ]);
+
+        $this->postJson(API_INVOICES."/{$invoice->id}/cancel")->assertStatus(200);
+
+        // Draft never had stock deducted, so nothing to restore
+        expect($product->fresh()->stock_quantity)->toBe(10);
+        $this->assertDatabaseMissing('stock_movements', [
+            'product_id' => $product->id,
+            'type' => 'cancellation',
+        ]);
+    });
+
     it('rejects cancelling a paid invoice', function () {
         $user = actingAsInvoiceUser();
         $invoice = Invoice::factory()->create(['user_id' => $user->id, 'status' => 'paid']);
