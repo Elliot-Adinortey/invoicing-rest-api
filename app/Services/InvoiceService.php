@@ -14,13 +14,14 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class InvoiceService implements InvoiceServiceInterface
 {
     /**
-     * @param  array{status?: string, customer_id?: string, search?: string, issue_date_from?: string, issue_date_to?: string, due_date_from?: string, due_date_to?: string, per_page?: int}  $filters
+     * @param  array{status?: string, customer_id?: string, search?: string, issue_date_from?: string, issue_date_to?: string, due_date_from?: string, due_date_to?: string, per_page?: int, user_id?: string}  $filters
      */
     public function paginate(array $filters = []): LengthAwarePaginator
     {
         $perPage = isset($filters['per_page']) ? min((int) $filters['per_page'], 100) : 15;
 
         return Invoice::with(['customer', 'user', 'items.product'])
+            ->when($filters['user_id'] ?? null, fn ($q, $userId) => $q->where('user_id', $userId))
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($filters['customer_id'] ?? null, fn ($q, $id) => $q->where('customer_id', $id))
             ->when($filters['search'] ?? null, fn ($q, $search) => $q->where('invoice_number', 'like', "%{$search}%"))
