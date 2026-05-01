@@ -257,6 +257,17 @@ php artisan test
 
 ---
 
+## Postman Collection
+
+You can access the API collection here:
+
+<https://github.com/Elliot-Adinortey/invoicing-rest-api/blob/develop/postman/Authentication.postman_collection.json>
+<https://github.com/Elliot-Adinortey/invoicing-rest-api/blob/develop/postman/Customers.postman_collection.json>
+<https://github.com/Elliot-Adinortey/invoicing-rest-api/blob/develop/postman/Invoices.postman_collection.json>
+<https://github.com/Elliot-Adinortey/invoicing-rest-api/blob/develop/postman/Products.postman_collection.json>
+
+---
+
 ## 🧩 Project Structure
 
 ```txt
