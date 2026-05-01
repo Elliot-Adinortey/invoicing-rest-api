@@ -33,6 +33,7 @@ class AuthController extends Controller
         ]);
 
         $result = $this->authService->login($validated);
+      
 
         return ApiResponse::success($result, 'Login successful.');
     }
