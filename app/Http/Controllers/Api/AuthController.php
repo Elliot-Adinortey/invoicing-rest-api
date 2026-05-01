@@ -25,6 +25,8 @@ class AuthController extends Controller
         return ApiResponse::success($result, 'User registered successfully.', 'success', 201);
     }
 
+
+
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -34,10 +36,10 @@ class AuthController extends Controller
 
         $result = $this->authService->login($validated);
       
-
         return ApiResponse::success($result, 'Login successful.');
     }
 
+    
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request);
