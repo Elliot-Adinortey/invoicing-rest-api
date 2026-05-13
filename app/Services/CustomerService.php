@@ -16,13 +16,10 @@ class CustomerService implements CustomerServiceInterface
     {
         $perPage = isset($filters['per_page']) ? min((int) $filters['per_page'], 100) : 15;
 
-        return Customer::when(
-            $filters['search'] ?? null,
-            fn ($q, $search) => $q->where(function ($q) use ($search) {
-                $q->where('customer_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+        return Customer::query()
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                return $query->where('customer_name', 'like', "%{$search}%");
             })
-        )
             ->latest()
             ->paginate($perPage);
     }
