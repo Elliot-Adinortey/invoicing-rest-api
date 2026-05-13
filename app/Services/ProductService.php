@@ -16,10 +16,10 @@ class ProductService implements ProductServiceInterface
     {
         $perPage = isset($filters['per_page']) ? min((int) $filters['per_page'], 100) : 15;
 
-        return Product::when(
-            $filters['search'] ?? null,
-            fn ($q, $search) => $q->where('product_name', 'like', "%{$search}%")
-        )
+        return Product::query()
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                return $query->where('product_name', 'like', "%{$search}%");
+            })
             ->latest()
             ->paginate($perPage);
     }
