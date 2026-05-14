@@ -41,10 +41,9 @@ class DatabaseSeeder extends Seeder
                 // Compute and persist accurate subtotal / total
                 $subtotal = $items->sum('amount');
 
-                $invoice->update([
-                    'subtotal' => $subtotal,
-                    'total' => $subtotal,
-                ]);
+                $invoice->subtotal = $subtotal;
+                $invoice->total = $subtotal;
+                $invoice->save();
             });
     }
 }
