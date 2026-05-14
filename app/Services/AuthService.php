@@ -37,7 +37,9 @@ class AuthService implements AuthServiceInterface
      */
     public function login(array $data): array
     {
-        $user = User::where('email', $data['email'])->first();
+        $user = User::query()
+            ->where('email', '=', $data['email'], 'and')
+            ->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw new HttpException(401, 'Invalid login credentials.');
