@@ -18,7 +18,10 @@ class CustomerService implements CustomerServiceInterface
 
         return Customer::query()
             ->when($filters['search'] ?? null, function ($query, $search) {
-                return $query->where('customer_name', 'like', "%{$search}%");
+                return $query->where(function ($query) use ($search) {
+                    $query->where('customer_name', 'like', "%{$search}%", 'and')
+                        ->orWhere('email', 'like', "%{$search}%", 'or');
+                });
             })
             ->latest()
             ->paginate($perPage);
